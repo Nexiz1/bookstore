@@ -143,3 +143,5 @@ Thumbs.db
 logs/
 *.log
 
+.claude/
+학번.txt
