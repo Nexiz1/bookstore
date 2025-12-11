@@ -1,40 +1,59 @@
+from typing import Optional
+
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
+
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
+
 
 class UserRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_user(self, user_id: int):
+    def get_by_id(self, user_id: int) -> Optional[User]:
         return self.db.query(User).filter(User.id == user_id).first()
 
-    def get_user_by_email(self, user_email: str):
-        return self.db.query(User).filter(User.email == user_email).first()
+    def get_by_email(self, email: str) -> Optional[User]:
+        return self.db.query(User).filter(User.email == email).first()
 
-    def get_users(self, skip: int = 0, limit: int = 100):
-        return self.db.query(User).offset(skip).limit(limit).all()
+    def get_all(self, skip: int = 0, limit: int = 100, keyword: Optional[str] = None):
+        query = self.db.query(User)
+        if keyword:
+            query = query.filter(
+                or_(User.name.ilike(f"%{keyword}%"), User.email.ilike(f"%{keyword}%"))
+            )
+        total = query.count()
+        users = query.offset(skip).limit(limit).all()
+        return users, total
 
-    def create_user(self, user: UserCreate):
-        db_user = User(**user.model_dump())
+    def create(self, user_data: dict) -> User:
+        db_user = User(**user_data)
         self.db.add(db_user)
         self.db.commit()
         self.db.refresh(db_user)
         return db_user
 
-    def update_user(self, user_id: int, user: UserUpdate):
-        db_user = self.get_user(user_id)
-        if db_user:
-            update_data = user.model_dump(exclude_unset=True)
-            for key, value in update_data.items():
-                setattr(db_user, key, value)
-            self.db.commit()
-            self.db.refresh(db_user)
-        return db_user
+    def update(self, user: User, update_data: dict) -> User:
+        for key, value in update_data.items():
+            if value is not None:
+                setattr(user, key, value)
+        self.db.commit()
+        self.db.refresh(user)
+        return user
 
-    def delete_user(self, user_id: int):
-        db_user = self.get_user(user_id)
-        if db_user:
-            self.db.delete(db_user)
-            self.db.commit()
-        return db_user
+    def update_password(self, user: User, hashed_password: str) -> User:
+        user.password = hashed_password
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    def update_role(self, user: User, role: str) -> User:
+        user.role = role
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    def delete(self, user: User) -> None:
+        self.db.delete(user)
+        self.db.commit()

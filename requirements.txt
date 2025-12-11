@@ -6,4 +6,13 @@ pydantic-settings
 python-multipart
 SQLAlchemy
 pyjwt
-passlib[bcrypt]
+pwdlib[argon2]
+bcrypt
+email-validator
+# MySQL 연결을 위한 라이브러리
+pymysql
+cryptography
+# 테스트 라이브러리
+pytest
+pytest-asyncio
+httpx

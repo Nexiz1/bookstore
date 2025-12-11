@@ -1,33 +1,78 @@
-from typing import List
-from fastapi import APIRouter, Depends
-from app.schemas.user import User, UserCreate, UserUpdate
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Query
+
+from app.api.dependencies import get_admin_user, get_current_user, get_user_service
+from app.models.user import User
 from app.schemas.response import SuccessResponse
-from app.api.dependencies import get_user_service
+from app.schemas.user import (
+    PasswordChange,
+    UserListResponse,
+    UserResponse,
+    UserRoleUpdate,
+    UserUpdate,
+)
 from app.services.user_service import UserService
 
 router = APIRouter()
 
-@router.post("/", response_model=SuccessResponse[User], status_code=201)
-def create_user(user: UserCreate, service: UserService = Depends(get_user_service)):
-    created_user = service.create_user(user)
-    return SuccessResponse(data=created_user)
 
-@router.get("/", response_model=SuccessResponse[List[User]])
-def read_users(skip: int = 0, limit: int = 100, service: UserService = Depends(get_user_service)):
-    users = service.get_users(skip=skip, limit=limit)
-    return SuccessResponse(data=users)
+@router.get("/me", response_model=SuccessResponse[UserResponse])
+def get_my_profile(
+    current_user: User = Depends(get_current_user),
+    service: UserService = Depends(get_user_service),
+):
+    """내 프로필 조회"""
+    user = service.get_me(current_user.id)
+    return SuccessResponse(data=UserResponse.model_validate(user))
 
-@router.get("/{user_id}", response_model=SuccessResponse[User])
-def read_user(user_id: int, service: UserService = Depends(get_user_service)):
-    user = service.get_user(user_id)
-    return SuccessResponse(data=user)
 
-@router.put("/{user_id}", response_model=SuccessResponse[User])
-def update_user(user_id: int, user: UserUpdate, service: UserService = Depends(get_user_service)):
-    updated_user = service.update_user(user_id, user)
-    return SuccessResponse(data=updated_user)
+@router.patch("/me", response_model=SuccessResponse[UserResponse])
+def update_my_profile(
+    update_data: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    service: UserService = Depends(get_user_service),
+):
+    """내 프로필 수정 (주소, 전화번호 등)"""
+    user = service.update_me(current_user.id, update_data)
+    return SuccessResponse(
+        data=UserResponse.model_validate(user), message="Profile updated successfully"
+    )
 
-@router.delete("/{user_id}", response_model=SuccessResponse[User])
-def delete_user(user_id: int, service: UserService = Depends(get_user_service)):
-    deleted_user = service.delete_user(user_id)
-    return SuccessResponse(data=deleted_user)
+
+@router.post("/me/password", response_model=SuccessResponse)
+def change_password(
+    password_data: PasswordChange,
+    current_user: User = Depends(get_current_user),
+    service: UserService = Depends(get_user_service),
+):
+    """비밀번호 변경"""
+    service.change_password(current_user.id, password_data)
+    return SuccessResponse(message="Password changed successfully")
+
+
+@router.get("/", response_model=SuccessResponse[UserListResponse])
+def get_all_users(
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=100),
+    keyword: Optional[str] = None,
+    admin_user: User = Depends(get_admin_user),
+    service: UserService = Depends(get_user_service),
+):
+    """전체 회원 목록 조회 (페이지네이션, 검색) - Admin only"""
+    result = service.get_all_users(page=page, size=size, keyword=keyword)
+    return SuccessResponse(data=result)
+
+
+@router.patch("/{user_id}/role", response_model=SuccessResponse[UserResponse])
+def update_user_role(
+    user_id: int,
+    role_data: UserRoleUpdate,
+    admin_user: User = Depends(get_admin_user),
+    service: UserService = Depends(get_user_service),
+):
+    """회원 권한 변경 (User ↔ Seller ↔ Admin) - Admin only"""
+    user = service.update_user_role(user_id, role_data.role.value, admin_user.id)
+    return SuccessResponse(
+        data=UserResponse.model_validate(user), message="User role updated successfully"
+    )

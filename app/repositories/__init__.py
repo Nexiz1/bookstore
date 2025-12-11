@@ -1,0 +1,10 @@
+from app.repositories.book_repository import BookRepository
+from app.repositories.cart_repository import CartRepository
+from app.repositories.favorite_repository import FavoriteRepository
+from app.repositories.order_repository import OrderItemRepository, OrderRepository
+from app.repositories.ranking_repository import RankingRepository
+from app.repositories.review_repository import ReviewRepository
+from app.repositories.sale_repository import SaleRepository
+from app.repositories.seller_repository import SellerRepository
+from app.repositories.settlement_repository import SettlementRepository
+from app.repositories.user_repository import UserRepository
