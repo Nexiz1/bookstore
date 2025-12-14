@@ -1,0 +1,4095 @@
+{
+	"info": {
+		"_postman_id": "ce5c5c65-230e-4fe9-833b-a6be26ae5474",
+		"name": "BookStore API collection",
+		"description": "온라인 서점 백엔드 API - FastAPI + MySQL + Redis",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "48959291",
+		"_collection_link": "https://wlstj1375-1317777.postman.co/workspace/%EC%B5%9C%EC%A7%84%EC%84%9C's-Workspace~2791782b-211d-40c8-8513-a32f0ff54a4a/collection/48959291-ce5c5c65-230e-4fe9-833b-a6be26ae5474?action=share&source=collection_link&creator=48959291"
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "회원가입",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"홍길동\",\n  \"gender\": \"male\",\n  \"address\": \"서울시 강남구\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/signup",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 정상 로그인",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"홍길동\",\n  \"gender\": \"male\",\n  \"address\": \"서울시 강남구\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/signup",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"signup"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:08:43 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "284"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 51,\n        \"email\": \"user@example.com\",\n        \"name\": \"홍길동\",\n        \"role\": \"user\",\n        \"birth_date\": \"2025-12-14\",\n        \"gender\": \"male\",\n        \"address\": \"서울시 강남구\",\n        \"phone_number\": null,\n        \"is_active\": true,\n        \"created_at\": \"2025-12-14T20:08:44\"\n    },\n    \"message\": \"User registered successfully\"\n}"
+						},
+						{
+							"name": "409 - 중복회원가입",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"홍길동\",\n  \"gender\": \"male\",\n  \"address\": \"서울시 강남구\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/signup",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"signup"
+									]
+								}
+							},
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:10:12 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "184"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:10:13\",\n    \"path\": \"/auth/signup\",\n    \"status\": 409,\n    \"code\": \"USER_ALREADY_EXISTS\",\n    \"message\": \"User with email 'Email already registered' already exists\",\n    \"details\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "로그인",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.collectionVariables.set(\"access_token\", jsonData.data.access_token);",
+									"pm.collectionVariables.set(\"refresh_token\", jsonData.data.refresh_token);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@bookstore.com\",\n  \"password\": \"admin123!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 로그인 성공",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/login",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"login"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:08:58 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "438"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MSIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxNzY1NzEyMzM4LCJ0eXBlIjoiYWNjZXNzIn0.XdsUZK5xbGfXQCJiYfHsruDMAB1xU86vCAn0SBusieU\",\n        \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MSIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxNzY2MzE1MzM4LCJ0eXBlIjoicmVmcmVzaCJ9.HMHvc0AJHZWdh4Sb0IHV51BnAQHzaO1eMpvS_Wxm16Y\",\n        \"token_type\": \"bearer\"\n    },\n    \"message\": \"Login successful\"\n}"
+						},
+						{
+							"name": "401 - 잘못된 비밀번호",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/login",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"login"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:46:12 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "156"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T11:46:12\",\n    \"path\": \"/auth/login\",\n    \"status\": 401,\n    \"code\": \"AUTH_INVALID_CREDENTIALS\",\n    \"message\": \"Invalid email or password\",\n    \"details\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "토큰 재발급",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/refresh",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 토큰 재발급 성공",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/refresh",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"refresh"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:26:56 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "450"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MSIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxNzY1NzEzNDE2LCJ0eXBlIjoiYWNjZXNzIn0.JyxIATnrQdjV5rnJUd3OxWasThMDITX9SQkDAe-bNZs\",\n        \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MSIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxNzY2MzE2NDE2LCJ0eXBlIjoicmVmcmVzaCJ9.fKyo-3VVEXHgYMe0S6IFikewZt_2sYt1TW1k81Gz0l8\",\n        \"token_type\": \"bearer\"\n    },\n    \"message\": \"Token refreshed successfully\"\n}"
+						}
+					]
+				},
+				{
+					"name": "로그아웃",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 로그아웃 성공",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/auth/logout",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"logout"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:32:00 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "68"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": null,\n    \"message\": \"Logged out successfully\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "2. Users",
+			"item": [
+				{
+					"name": "내 프로필 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"me"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 내 프로필 조회",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/users/me",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"users",
+										"me"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:27:10 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "258"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 51,\n        \"email\": \"user@example.com\",\n        \"name\": \"홍길동\",\n        \"role\": \"user\",\n        \"birth_date\": \"2025-12-14\",\n        \"gender\": \"male\",\n        \"address\": \"서울시 강남구\",\n        \"phone_number\": null,\n        \"is_active\": true,\n        \"created_at\": \"2025-12-14T20:08:44\"\n    },\n    \"message\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "내 프로필 수정",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"홍길동\",\n  \"address\": \"서울시 서초구\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"me"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 내 프로필 수정",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"홍길동\",\n  \"address\": \"서울시 서초구\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/users/me",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"users",
+										"me"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:27:31 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "284"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 51,\n        \"email\": \"user@example.com\",\n        \"name\": \"홍길동\",\n        \"role\": \"user\",\n        \"birth_date\": \"2025-12-14\",\n        \"gender\": \"male\",\n        \"address\": \"서울시 서초구\",\n        \"phone_number\": null,\n        \"is_active\": true,\n        \"created_at\": \"2025-12-14T20:08:44\"\n    },\n    \"message\": \"Profile updated successfully\"\n}"
+						},
+						{
+							"name": "401 - 비로그인 수정",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"홍길동\",\n  \"address\": \"서울시 서초구\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/users/me",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"users",
+										"me"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:13:53 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "146"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:13:54\",\n    \"path\": \"/users/me\",\n    \"status\": 401,\n    \"code\": \"AUTH_UNAUTHORIZED\",\n    \"message\": \"Invalid or expired token\",\n    \"details\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "비밀번호 변경",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"current_password\": \"password123\",\n  \"new_password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users/me/password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"me",
+								"password"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 비밀번호 변경 성공",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"current_password\": \"newpassword456\",\n  \"new_password\": \"password123\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/users/me/password",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"users",
+										"me",
+										"password"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:59:34 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "74"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": null,\n    \"message\": \"Password changed successfully\"\n}"
+						},
+						{
+							"name": "401 - 비밀번호 틀림",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"current_password\": \"newpassword456\",\n  \"new_password\": \"password123\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/users/me/password",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"users",
+										"me",
+										"password"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:16:05 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "167"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:16:05\",\n    \"path\": \"/users/me/password\",\n    \"status\": 401,\n    \"code\": \"AUTH_INVALID_CREDENTIALS\",\n    \"message\": \"Current password is incorrect\",\n    \"details\": null\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "3. Sellers",
+			"item": [
+				{
+					"name": "판매자 등록",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"business_name\": \"북스토어\",\n  \"business_number\": \"123-45-67890\",\n  \"email\": \"seller@example.com\",\n  \"address\": \"서울시 강남구\",\n  \"phone_number\": \"02-1234-5678\",\n  \"payout_account\": \"110-123-456789\",\n  \"payout_holder\": \"홍길동\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/sellers/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"sellers",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 판매자 등록 성공",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"business_name\": \"북스토어\",\n  \"business_number\": \"123-45-67890\",\n  \"email\": \"seller@example.com\",\n  \"address\": \"서울시 강남구\",\n  \"phone_number\": \"02-1234-5678\",\n  \"payout_account\": \"110-123-456789\",\n  \"payout_holder\": \"홍길동\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/sellers/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"sellers",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:36:28 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "345"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 11,\n        \"user_id\": 51,\n        \"business_name\": \"북스토어\",\n        \"business_number\": \"123-45-67890\",\n        \"email\": \"seller@example.com\",\n        \"address\": \"서울시 강남구\",\n        \"phone_number\": \"02-1234-5678\",\n        \"payout_account\": \"110-123-456789\",\n        \"payout_holder\": \"홍길동\",\n        \"created_at\": \"2025-12-14T20:36:29\"\n    },\n    \"message\": \"Seller registration successful\"\n}"
+						},
+						{
+							"name": "409 - 중복 판매자 등록",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"business_name\": \"북스토어\",\n  \"business_number\": \"123-45-67890\",\n  \"email\": \"seller@example.com\",\n  \"address\": \"서울시 강남구\",\n  \"phone_number\": \"02-1234-5678\",\n  \"payout_account\": \"110-123-456789\",\n  \"payout_holder\": \"홍길동\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/sellers/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"sellers",
+										""
+									]
+								}
+							},
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:17:24 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "159"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:17:24\",\n    \"path\": \"/sellers/\",\n    \"status\": 409,\n    \"code\": \"SELLER_ALREADY_EXISTS\",\n    \"message\": \"You already have a seller profile\",\n    \"details\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "내 판매자 정보 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/sellers/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"sellers",
+								"me"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 내 판매자 정보 조회 성공",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/sellers/me",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"sellers",
+										"me"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:18:12 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "317"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 11,\n        \"user_id\": 51,\n        \"business_name\": \"북스토어\",\n        \"business_number\": \"123-45-67890\",\n        \"email\": \"seller@example.com\",\n        \"address\": \"서울시 강남구\",\n        \"phone_number\": \"02-1234-5678\",\n        \"payout_account\": \"110-123-456789\",\n        \"payout_holder\": \"홍길동\",\n        \"created_at\": \"2025-12-14T20:36:29\"\n    },\n    \"message\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "내 정산 내역 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/settlements/?startDate&endDate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"settlements",
+								""
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": null,
+									"description": "정산 시작일"
+								},
+								{
+									"key": "endDate",
+									"value": null,
+									"description": "정산 마감일"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 내 정산 내역 조회",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/settlements/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"settlements",
+										""
+									],
+									"query": [
+										{
+											"key": "startDate",
+											"value": null,
+											"description": "정산 시작일",
+											"disabled": true
+										},
+										{
+											"key": "endDate",
+											"value": null,
+											"description": "정산 마감일",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:20:19 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "71"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Invalid Date",
+									"domain": "",
+									"path": ""
+								}
+							],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"settlements\": [],\n        \"total\": 0\n    },\n    \"message\": null\n}"
+						},
+						{
+							"name": "422 - 기간 파라미터 검증 오류",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/settlements/?startDate&endDate",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"settlements",
+										""
+									],
+									"query": [
+										{
+											"key": "startDate",
+											"value": null,
+											"description": "정산 시작일"
+										},
+										{
+											"key": "endDate",
+											"value": null,
+											"description": "정산 마감일"
+										}
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:33:31 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "441"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:33:32\",\n    \"path\": \"/settlements/\",\n    \"status\": 422,\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"요청 데이터 검증에 실패했습니다.\",\n    \"details\": [\n        {\n            \"field\": \"query.startDate\",\n            \"message\": \"Input should be a valid date or datetime, input is too short\",\n            \"type\": \"date_from_datetime_parsing\"\n        },\n        {\n            \"field\": \"query.endDate\",\n            \"message\": \"Input should be a valid date or datetime, input is too short\",\n            \"type\": \"date_from_datetime_parsing\"\n        }\n    ]\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "4. Books",
+			"item": [
+				{
+					"name": "도서 등록",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"파이썬 완벽 가이드\",\n  \"author\": \"홍길동\",\n  \"publisher\": \"출판사\",\n  \"summary\": \"파이썬 입문서\",\n  \"isbn\": \"978-89-1231-5\",\n  \"price\": 25000,\n  \"status\": \"ONSALE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/books/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "201 - 도서 등록",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"파이썬 완벽 가이드\",\n  \"author\": \"홍길동\",\n  \"publisher\": \"출판사\",\n  \"summary\": \"파이썬 입문서\",\n  \"isbn\": \"978-89-1234-5\",\n  \"price\": 25000,\n  \"status\": \"ONSALE\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/books/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:37:53 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "384"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 101,\n        \"seller_id\": 11,\n        \"title\": \"파이썬 완벽 가이드\",\n        \"author\": \"홍길동\",\n        \"publisher\": \"출판사\",\n        \"summary\": \"파이썬 입문서\",\n        \"isbn\": \"978-89-1234-5\",\n        \"price\": \"25000.00\",\n        \"status\": \"ONSALE\",\n        \"average_rating\": \"0.00\",\n        \"review_count\": 0,\n        \"purchase_count\": 0,\n        \"publication_date\": null,\n        \"created_at\": \"2025-12-14T20:37:53\"\n    },\n    \"message\": \"Book created successfully\"\n}"
+						},
+						{
+							"name": "409 - 중복 도서 등록",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"파이썬 완벽 가이드\",\n  \"author\": \"홍길동\",\n  \"publisher\": \"출판사\",\n  \"summary\": \"파이썬 입문서\",\n  \"isbn\": \"978-89-1234-5\",\n  \"price\": 25000,\n  \"status\": \"ONSALE\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/books/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										""
+									]
+								}
+							},
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:35:04 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "156"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:35:05\",\n    \"path\": \"/books/\",\n    \"status\": 409,\n    \"code\": \"BOOK_ALREADY_EXISTS\",\n    \"message\": \"Book with this ISBN already exists\",\n    \"details\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "도서 목록 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/books/?page=1&size=10&keyword=파이썬&sort=price_asc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "keyword",
+									"value": "파이썬"
+								},
+								{
+									"key": "sort",
+									"value": "price_asc"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 도서 목록 조회",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/books/?page=1&size=10&keyword=파이썬&sort=price_asc",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										""
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										},
+										{
+											"key": "keyword",
+											"value": "파이썬"
+										},
+										{
+											"key": "sort",
+											"value": "price_asc"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:39:14 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "402"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"books\": [\n            {\n                \"id\": 101,\n                \"seller_id\": 11,\n                \"title\": \"파이썬 완벽 가이드\",\n                \"author\": \"홍길동\",\n                \"publisher\": \"출판사\",\n                \"summary\": \"파이썬 입문서\",\n                \"isbn\": \"978-89-1234-5\",\n                \"price\": \"25000.00\",\n                \"status\": \"ONSALE\",\n                \"average_rating\": \"0.00\",\n                \"review_count\": 0,\n                \"purchase_count\": 0,\n                \"publication_date\": null,\n                \"created_at\": \"2025-12-14T20:37:53\"\n            }\n        ],\n        \"total\": 1,\n        \"page\": 1,\n        \"size\": 10\n    },\n    \"message\": null\n}"
+						},
+						{
+							"name": "422 - 페이지 당 항목 수 파라미터 검증 에러",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/books/?page=1&size=10000&keyword=파이썬&sort=price_asc",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										""
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "size",
+											"value": "10000"
+										},
+										{
+											"key": "keyword",
+											"value": "파이썬"
+										},
+										{
+											"key": "sort",
+											"value": "price_asc"
+										}
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:35:44 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "265"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:35:44\",\n    \"path\": \"/books/\",\n    \"status\": 422,\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"요청 데이터 검증에 실패했습니다.\",\n    \"details\": [\n        {\n            \"field\": \"query.size\",\n            \"message\": \"Input should be less than or equal to 100\",\n            \"type\": \"less_than_equal\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "도서 상세 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/books/102",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								"102"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 도서 상세 조회",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/books/101",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										"101"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:40:32 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "361"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 101,\n        \"seller_id\": 11,\n        \"title\": \"파이썬 완벽 가이드\",\n        \"author\": \"홍길동\",\n        \"publisher\": \"출판사\",\n        \"summary\": \"파이썬 입문서\",\n        \"isbn\": \"978-89-1234-5\",\n        \"price\": \"25000.00\",\n        \"status\": \"ONSALE\",\n        \"average_rating\": \"0.00\",\n        \"review_count\": 0,\n        \"purchase_count\": 0,\n        \"publication_date\": null,\n        \"created_at\": \"2025-12-14T20:37:53\"\n    },\n    \"message\": null\n}"
+						},
+						{
+							"name": "404 - 없는 도서 조회",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/books/102",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										"102"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:37:13 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "134"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:37:13\",\n    \"path\": \"/books/102\",\n    \"status\": 404,\n    \"code\": \"BOOK_NOT_FOUND\",\n    \"message\": \"Book not found\",\n    \"details\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "도서 수정",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"price\": 20000,\n  \"status\": \"ONSALE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/books/101",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								"101"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 도서 수정",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"price\": 20000,\n  \"status\": \"ONSALE\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/books/101",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										"101"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:41:44 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "381"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 101,\n        \"seller_id\": 11,\n        \"title\": \"파이썬 완벽 가이드\",\n        \"author\": \"홍길동\",\n        \"publisher\": \"출판사\",\n        \"summary\": \"파이썬 입문서\",\n        \"isbn\": \"978-89-1234-5\",\n        \"price\": \"20000\",\n        \"status\": \"ONSALE\",\n        \"average_rating\": \"0.00\",\n        \"review_count\": 0,\n        \"purchase_count\": 0,\n        \"publication_date\": null,\n        \"created_at\": \"2025-12-14T20:37:53\"\n    },\n    \"message\": \"Book updated successfully\"\n}"
+						}
+					]
+				},
+				{
+					"name": "도서 삭제",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/books/101",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								"101"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 도서 삭제",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/books/101",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										"101"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:39:19 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "70"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": null,\n    \"message\": \"Book deleted successfully\"\n}"
+						},
+						{
+							"name": "403 - 미보유 도서 삭제",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/books/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										"1"
+									]
+								}
+							},
+							"status": "Forbidden",
+							"code": 403,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:38:40 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "141"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:38:41\",\n    \"path\": \"/books/1\",\n    \"status\": 403,\n    \"code\": \"BOOK_NOT_OWNED\",\n    \"message\": \"You don't own this book\",\n    \"details\": null\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "5. Carts",
+			"item": [
+				{
+					"name": "장바구니 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/carts/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"carts",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 장바구니 조회",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/carts/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"carts",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:39:47 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "256"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"items\": [\n            {\n                \"id\": 33,\n                \"book_id\": 101,\n                \"book_title\": \"파이썬 완벽 가이드\",\n                \"book_price\": \"25000.00\",\n                \"quantity\": 2,\n                \"subtotal\": \"50000.00\",\n                \"created_at\": \"2025-12-14T20:43:28\"\n            }\n        ],\n        \"total_amount\": \"50000.00\",\n        \"total_items\": 1\n    },\n    \"message\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "장바구니에 추가",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"book_id\": 101,\n  \"quantity\": 100\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/carts/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"carts",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "201 - 장바구니 항목 생성",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"book_id\": 101,\n  \"quantity\": 2\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/carts/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"carts",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:43:28 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "218"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 33,\n        \"book_id\": 101,\n        \"book_title\": \"파이썬 완벽 가이드\",\n        \"book_price\": \"25000.00\",\n        \"quantity\": 2,\n        \"subtotal\": \"50000.00\",\n        \"created_at\": \"2025-12-14T20:43:28\"\n    },\n    \"message\": \"Item added to cart\"\n}"
+						},
+						{
+							"name": "409 - 중복 항목 추가",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"book_id\": 101,\n  \"quantity\": 100\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/carts/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"carts",
+										""
+									]
+								}
+							},
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:40:14 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "160"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:40:14\",\n    \"path\": \"/carts/\",\n    \"status\": 409,\n    \"code\": \"CART_ITEM_ALREADY_EXISTS\",\n    \"message\": \"This book is already in your cart\",\n    \"details\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "장바구니 수량 변경",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 3\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/carts/32",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"carts",
+								"32"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 장바구니 수량 변경",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"quantity\": 3\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/carts/32",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"carts",
+										"32"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:11:10 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "220"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 32,\n        \"book_id\": 2,\n        \"book_title\": \"유저 친화적 5세대 허브\",\n        \"book_price\": \"34000.00\",\n        \"quantity\": 3,\n        \"subtotal\": \"102000.00\",\n        \"created_at\": \"2025-12-14T20:10:39\"\n    },\n    \"message\": \"Quantity updated\"\n}"
+						}
+					]
+				},
+				{
+					"name": "장바구니에서 제거",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/carts/33",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"carts",
+								"33"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 장바구니에서 제거",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/carts/33",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"carts",
+										"33"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:42:43 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "67"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": null,\n    \"message\": \"Item removed from cart\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "6. Orders",
+			"item": [
+				{
+					"name": "주문 생성",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "201 - 주문 생성",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/orders/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"orders",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:10:05 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "354"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 51,\n        \"user_id\": 51,\n        \"order_date\": \"2025-12-14T20:10:05\",\n        \"total_amount\": \"26000.00\",\n        \"status\": \"CREATED\",\n        \"items\": [\n            {\n                \"id\": 154,\n                \"book_id\": 1,\n                \"book_title\": \"올바른 사이즈의 물류 생산 능력\",\n                \"price\": \"13000.00\",\n                \"quantity\": 2,\n                \"total_amount\": \"26000.00\"\n            }\n        ],\n        \"created_at\": \"2025-12-14T20:10:05\"\n    },\n    \"message\": \"Order created successfully\"\n}"
+						},
+						{
+							"name": "400 - 빈 주문 생성 시도",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/orders/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"orders",
+										""
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:51:15 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "131"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:51:15\",\n    \"path\": \"/orders/\",\n    \"status\": 400,\n    \"code\": \"CART_EMPTY\",\n    \"message\": \"No items to order\",\n    \"details\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "내 주문 목록 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/orders/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "201 - 내 주문 목록 조회",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/orders/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"orders",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:13:19 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "372"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"orders\": [\n            {\n                \"id\": 51,\n                \"user_id\": 51,\n                \"order_date\": \"2025-12-14T20:10:05\",\n                \"total_amount\": \"26000.00\",\n                \"status\": \"CREATED\",\n                \"items\": [\n                    {\n                        \"id\": 154,\n                        \"book_id\": 1,\n                        \"book_title\": \"올바른 사이즈의 물류 생산 능력\",\n                        \"price\": \"13000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"26000.00\"\n                    }\n                ],\n                \"created_at\": \"2025-12-14T20:10:05\"\n            }\n        ],\n        \"total\": 1,\n        \"page\": 1,\n        \"size\": 10\n    },\n    \"message\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "주문 상세 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/orders/51",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders",
+								"51"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 주문 상세 조회",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/orders/51",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"orders",
+										"51"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:15:03 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "330"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 51,\n        \"user_id\": 51,\n        \"order_date\": \"2025-12-14T20:10:05\",\n        \"total_amount\": \"26000.00\",\n        \"status\": \"CREATED\",\n        \"items\": [\n            {\n                \"id\": 154,\n                \"book_id\": 1,\n                \"book_title\": \"올바른 사이즈의 물류 생산 능력\",\n                \"price\": \"13000.00\",\n                \"quantity\": 2,\n                \"total_amount\": \"26000.00\"\n            }\n        ],\n        \"created_at\": \"2025-12-14T20:10:05\"\n    },\n    \"message\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "주문 취소",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/orders/51/cancel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders",
+								"51",
+								"cancel"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 주문 취소",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/orders/51/cancel",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"orders",
+										"51",
+										"cancel"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:45:16 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "355"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 51,\n        \"user_id\": 51,\n        \"order_date\": \"2025-12-14T20:10:05\",\n        \"total_amount\": \"26000.00\",\n        \"status\": \"REFUND\",\n        \"items\": [\n            {\n                \"id\": 154,\n                \"book_id\": 1,\n                \"book_title\": \"올바른 사이즈의 물류 생산 능력\",\n                \"price\": \"13000.00\",\n                \"quantity\": 2,\n                \"total_amount\": \"26000.00\"\n            }\n        ],\n        \"created_at\": \"2025-12-14T20:10:05\"\n    },\n    \"message\": \"Order cancelled successfully\"\n}"
+						},
+						{
+							"name": "400 - 이미 취소된 주문",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/orders/51/cancel",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"orders",
+										"51",
+										"cancel"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:46:40 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "167"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:46:40\",\n    \"path\": \"/orders/51/cancel\",\n    \"status\": 400,\n    \"code\": \"ORDER_CANCEL_NOT_ALLOWED\",\n    \"message\": \"This order cannot be cancelled\",\n    \"details\": null\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "7. Reviews",
+			"item": [
+				{
+					"name": "리뷰 작성",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"order_item_id\": 155,\n  \"rating\": 5,\n  \"comment\": \"정말 좋은 책입니다!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/books/101/reviews",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								"101",
+								"reviews"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "201 - 리뷰 작성",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"order_item_id\": 155,\n  \"rating\": 5,\n  \"comment\": \"정말 좋은 책입니다!\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/books/101/reviews",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										"101",
+										"reviews"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:53:12 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "214"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 30,\n        \"user_id\": 51,\n        \"user_name\": \"홍길동\",\n        \"book_id\": 101,\n        \"rating\": 5,\n        \"comment\": \"정말 좋은 책입니다!\",\n        \"created_at\": \"2025-12-14T21:53:13\"\n    },\n    \"message\": \"Review created successfully\"\n}"
+						},
+						{
+							"name": "403 - 미구매책 리뷰 작성",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"order_item_id\": 154,\n  \"rating\": 5,\n  \"comment\": \"정말 좋은 책입니다!\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/books/2/reviews",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										"2",
+										"reviews"
+									]
+								}
+							},
+							"status": "Forbidden",
+							"code": 403,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:50:15 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "166"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:50:16\",\n    \"path\": \"/books/2/reviews\",\n    \"status\": 403,\n    \"code\": \"REVIEW_NOT_ALLOWED\",\n    \"message\": \"This order item is not for this book\",\n    \"details\": null\n}"
+						},
+						{
+							"name": "409 - 중복 리뷰 작성",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"order_item_id\": 154,\n  \"rating\": 5,\n  \"comment\": \"정말 좋은 책입니다!\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/books/1/reviews",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										"1",
+										"reviews"
+									]
+								}
+							},
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:49:32 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "168"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:49:32\",\n    \"path\": \"/books/1/reviews\",\n    \"status\": 409,\n    \"code\": \"REVIEW_ALREADY_EXISTS\",\n    \"message\": \"You have already reviewed this item\",\n    \"details\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "도서 리뷰 목록 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/books/10123/reviews",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								"10123",
+								"reviews"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 도서 리뷰 목록 조회",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/books/1/reviews",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										"1",
+										"reviews"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:53:42 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "232"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"reviews\": [\n            {\n                \"id\": 29,\n                \"user_id\": 51,\n                \"user_name\": \"홍길동\",\n                \"book_id\": 1,\n                \"rating\": 5,\n                \"comment\": \"정말 좋은 책입니다!\",\n                \"created_at\": \"2025-12-14T20:15:49\"\n            }\n        ],\n        \"total\": 1,\n        \"average_rating\": 5\n    },\n    \"message\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "리뷰 수정",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rating\": 4,\n  \"comment\": \"수정된 리뷰입니다.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/reviews/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reviews",
+								"1"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 리뷰 수정",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"rating\": 4,\n  \"comment\": \"수정된 리뷰입니다.\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/reviews/29",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"reviews",
+										"29"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:57:00 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "211"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 29,\n        \"user_id\": 51,\n        \"user_name\": \"홍길동\",\n        \"book_id\": 1,\n        \"rating\": 4,\n        \"comment\": \"수정된 리뷰입니다.\",\n        \"created_at\": \"2025-12-14T20:15:49\"\n    },\n    \"message\": \"Review updated successfully\"\n}"
+						},
+						{
+							"name": "403 - 작성하지 않은 리뷰 수정 시도",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"rating\": 4,\n  \"comment\": \"수정된 리뷰입니다.\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/reviews/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"reviews",
+										"1"
+									]
+								}
+							},
+							"status": "Forbidden",
+							"code": 403,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:57:44 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "147"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:57:45\",\n    \"path\": \"/reviews/1\",\n    \"status\": 403,\n    \"code\": \"REVIEW_NOT_OWNED\",\n    \"message\": \"You don't own this review\",\n    \"details\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "리뷰 삭제",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/reviews/30",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reviews",
+								"30"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 리뷰 삭제",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/reviews/30",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"reviews",
+										"30"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:59:24 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "72"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": null,\n    \"message\": \"Review deleted successfully\"\n}"
+						},
+						{
+							"name": "403 - 작성하지 않은리뷰 삭제",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/reviews/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"reviews",
+										"1"
+									]
+								}
+							},
+							"status": "Forbidden",
+							"code": 403,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:58:53 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "147"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:58:53\",\n    \"path\": \"/reviews/1\",\n    \"status\": 403,\n    \"code\": \"REVIEW_NOT_OWNED\",\n    \"message\": \"You don't own this review\",\n    \"details\": null\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "8. Favorites",
+			"item": [
+				{
+					"name": "찜 추가",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/books/2/favorites/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								"2",
+								"favorites",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "201 - 찜 추가",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/books/2/favorites/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										"2",
+										"favorites",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:21:47 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "212"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 52,\n        \"book_id\": 2,\n        \"book_title\": \"유저 친화적 5세대 허브\",\n        \"book_author\": \"강은서\",\n        \"book_price\": \"34000.00\",\n        \"created_at\": \"2025-12-14T20:21:47\"\n    },\n    \"message\": \"Added to favorites\"\n}"
+						},
+						{
+							"name": "409 - 중복 찜 추가",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/books/2/favorites/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										"2",
+										"favorites",
+										""
+									]
+								}
+							},
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 13:00:32 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "175"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T13:00:32\",\n    \"path\": \"/books/2/favorites\",\n    \"status\": 409,\n    \"code\": \"FAVORITE_ALREADY_EXISTS\",\n    \"message\": \"This book is already in your favorites\",\n    \"details\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "내 찜 목록 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/favorites/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"favorites",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 내 찜 목록 조회",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/favorites/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"favorites",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:22:05 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "388"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"favorites\": [\n            {\n                \"id\": 52,\n                \"book_id\": 2,\n                \"book_title\": \"유저 친화적 5세대 허브\",\n                \"book_author\": \"강은서\",\n                \"book_price\": \"34000.00\",\n                \"created_at\": \"2025-12-14T20:21:47\"\n            },\n            {\n                \"id\": 51,\n                \"book_id\": 1,\n                \"book_title\": \"올바른 사이즈의 물류 생산 능력\",\n                \"book_author\": \"류지아\",\n                \"book_price\": \"13000.00\",\n                \"created_at\": \"2025-12-14T20:21:34\"\n            }\n        ],\n        \"total\": 2\n    },\n    \"message\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "찜 취소",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/books/1/favorites",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								"1",
+								"favorites"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 찜 취소",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/books/1/favorites",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										"1",
+										"favorites"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:22:35 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "67"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": null,\n    \"message\": \"Removed from favorites\"\n}"
+						},
+						{
+							"name": "404 - 없는 항목 취소 시도",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/books/1/favorites",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"books",
+										"1",
+										"favorites"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 13:02:15 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "150"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T13:02:15\",\n    \"path\": \"/books/1/favorites\",\n    \"status\": 404,\n    \"code\": \"FAVORITE_NOT_FOUND\",\n    \"message\": \"Favorite not found\",\n    \"details\": null\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "9. Rankings",
+			"item": [
+				{
+					"name": "판매량 순 랭킹",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/rankings/?type=purchaseCount&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"rankings",
+								""
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "purchaseCount"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 판매량 순 랭킹",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/rankings/?type=purchaseCount&limit=10",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"rankings",
+										""
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "purchaseCount"
+										},
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:23:01 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "1553"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"ranking_type\": \"purchaseCount\",\n        \"age_group\": null,\n        \"gender\": null,\n        \"rankings\": [\n            {\n                \"rank\": 1,\n                \"book_id\": 83,\n                \"book_title\": \"다중 주파수 멀티미디어 프로토콜\",\n                \"book_author\": \"김채원\",\n                \"purchase_count\": 9,\n                \"average_rating\": \"4.00\"\n            },\n            {\n                \"rank\": 2,\n                \"book_id\": 42,\n                \"book_title\": \"자가 이용 가능한 멀티 태스킹 인\",\n                \"book_author\": \"최혜진\",\n                \"purchase_count\": 7,\n                \"average_rating\": \"4.00\"\n            },\n            {\n                \"rank\": 3,\n                \"book_id\": 96,\n                \"book_title\": \"모니터링되는 무해한 인트라넷\",\n                \"book_author\": \"김영길\",\n                \"purchase_count\": 7,\n                \"average_rating\": \"5.00\"\n            },\n            {\n                \"rank\": 4,\n                \"book_id\": 13,\n                \"book_title\": \"낮은 백그라운드 아키텍쳐\",\n                \"book_author\": \"엄정웅\",\n                \"purchase_count\": 7,\n                \"average_rating\": \"3.56\"\n            },\n            {\n                \"rank\": 5,\n                \"book_id\": 49,\n                \"book_title\": \"강력한 객체 지향적 코어\",\n                \"book_author\": \"박지훈\",\n                \"purchase_count\": 7,\n                \"average_rating\": \"5.00\"\n            },\n            {\n                \"rank\": 6,\n                \"book_id\": 17,\n                \"book_title\": \"원활한 안정적 정책\",\n                \"book_author\": \"김순자\",\n                \"purchase_count\": 7,\n                \"average_rating\": \"4.00\"\n            },\n            {\n                \"rank\": 7,\n                \"book_id\": 31,\n                \"book_title\": \"복제된 수요 중심 분석\",\n                \"book_author\": \"김상현\",\n                \"purchase_count\": 6,\n                \"average_rating\": \"3.56\"\n            },\n            {\n                \"rank\": 8,\n                \"book_id\": 70,\n                \"book_title\": \"오픈소스 분석중인 제품\",\n                \"book_author\": \"황혜진\",\n                \"purchase_count\": 6,\n                \"average_rating\": \"4.57\"\n            },\n            {\n                \"rank\": 9,\n                \"book_id\": 11,\n                \"book_title\": \"크로스 그룹 결합된 전략\",\n                \"book_author\": \"이서준\",\n                \"purchase_count\": 6,\n                \"average_rating\": \"3.04\"\n            },\n            {\n                \"rank\": 10,\n                \"book_id\": 47,\n                \"book_title\": \"출판된 3세대 허브\",\n                \"book_author\": \"장민지\",\n                \"purchase_count\": 6,\n                \"average_rating\": \"3.88\"\n            }\n        ]\n    },\n    \"message\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "평점 순 랭킹",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/rankings/?type=averageRating&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"rankings",
+								""
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "averageRating"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 평점 순 랭킹",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/rankings/?type=averageRating&limit=10",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"rankings",
+										""
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "averageRating"
+										},
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 11:23:34 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "1581"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"ranking_type\": \"averageRating\",\n        \"age_group\": null,\n        \"gender\": null,\n        \"rankings\": [\n            {\n                \"rank\": 1,\n                \"book_id\": 1,\n                \"book_title\": \"올바른 사이즈의 물류 생산 능력\",\n                \"book_author\": \"류지아\",\n                \"purchase_count\": 2,\n                \"average_rating\": \"5.00\"\n            },\n            {\n                \"rank\": 2,\n                \"book_id\": 96,\n                \"book_title\": \"모니터링되는 무해한 인트라넷\",\n                \"book_author\": \"김영길\",\n                \"purchase_count\": 7,\n                \"average_rating\": \"5.00\"\n            },\n            {\n                \"rank\": 3,\n                \"book_id\": 36,\n                \"book_title\": \"비즈니스 중점적 비동기 어플리케이\",\n                \"book_author\": \"이지현\",\n                \"purchase_count\": 1,\n                \"average_rating\": \"5.00\"\n            },\n            {\n                \"rank\": 4,\n                \"book_id\": 77,\n                \"book_title\": \"트리플 버퍼 글로벌 배열\",\n                \"book_author\": \"이영미\",\n                \"purchase_count\": 2,\n                \"average_rating\": \"5.00\"\n            },\n            {\n                \"rank\": 5,\n                \"book_id\": 49,\n                \"book_title\": \"강력한 객체 지향적 코어\",\n                \"book_author\": \"박지훈\",\n                \"purchase_count\": 7,\n                \"average_rating\": \"5.00\"\n            },\n            {\n                \"rank\": 6,\n                \"book_id\": 59,\n                \"book_title\": \"크로스 그룹 3세대 공구\",\n                \"book_author\": \"이광수\",\n                \"purchase_count\": 3,\n                \"average_rating\": \"5.00\"\n            },\n            {\n                \"rank\": 7,\n                \"book_id\": 66,\n                \"book_title\": \"효율적인 필수 생산 능력\",\n                \"book_author\": \"이성수\",\n                \"purchase_count\": 3,\n                \"average_rating\": \"5.00\"\n            },\n            {\n                \"rank\": 8,\n                \"book_id\": 3,\n                \"book_title\": \"멀티 채널 잘 모듈화된 엑스트라넷\",\n                \"book_author\": \"송영수\",\n                \"purchase_count\": 3,\n                \"average_rating\": \"4.00\"\n            },\n            {\n                \"rank\": 9,\n                \"book_id\": 18,\n                \"book_title\": \"무결점의 결합된 예보\",\n                \"book_author\": \"권아름\",\n                \"purchase_count\": 4,\n                \"average_rating\": \"4.00\"\n            },\n            {\n                \"rank\": 10,\n                \"book_id\": 74,\n                \"book_title\": \"디지털화된 해답 기반 회로\",\n                \"book_author\": \"김성현\",\n                \"purchase_count\": 1,\n                \"average_rating\": \"4.00\"\n            }\n        ]\n    },\n    \"message\": null\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "10. Admin",
+			"item": [
+				{
+					"name": "전체 주문 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/orders?page=1&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"orders"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "PENDING",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 전체 주문 조회",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/admin/orders?page=1&size=10",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"admin",
+										"orders"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										},
+										{
+											"key": "status",
+											"value": "PENDING",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 13:07:42 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "5774"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"orders\": [\n            {\n                \"id\": 52,\n                \"user_id\": 51,\n                \"order_date\": \"2025-12-14T21:51:58\",\n                \"total_amount\": \"2500000.00\",\n                \"status\": \"CREATED\",\n                \"items\": [\n                    {\n                        \"id\": 155,\n                        \"book_id\": 101,\n                        \"book_title\": \"파이썬 완벽 가이드\",\n                        \"price\": \"25000.00\",\n                        \"quantity\": 100,\n                        \"total_amount\": \"2500000.00\"\n                    }\n                ],\n                \"created_at\": \"2025-12-14T21:51:58\"\n            },\n            {\n                \"id\": 51,\n                \"user_id\": 51,\n                \"order_date\": \"2025-12-14T20:10:05\",\n                \"total_amount\": \"26000.00\",\n                \"status\": \"REFUND\",\n                \"items\": [\n                    {\n                        \"id\": 154,\n                        \"book_id\": 1,\n                        \"book_title\": \"올바른 사이즈의 물류 생산 능력\",\n                        \"price\": \"13000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"26000.00\"\n                    }\n                ],\n                \"created_at\": \"2025-12-14T20:10:05\"\n            },\n            {\n                \"id\": 1,\n                \"user_id\": 28,\n                \"order_date\": \"2025-02-26T17:26:24\",\n                \"total_amount\": \"93000.00\",\n                \"status\": \"ARRIVED\",\n                \"items\": [\n                    {\n                        \"id\": 1,\n                        \"book_id\": 99,\n                        \"book_title\": \"낮은 요약 지식 기반\",\n                        \"price\": \"31000.00\",\n                        \"quantity\": 3,\n                        \"total_amount\": \"93000.00\"\n                    }\n                ],\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 2,\n                \"user_id\": 1,\n                \"order_date\": \"2025-06-29T21:00:06\",\n                \"total_amount\": \"300000.00\",\n                \"status\": \"ARRIVED\",\n                \"items\": [\n                    {\n                        \"id\": 4,\n                        \"book_id\": 7,\n                        \"book_title\": \"강력한 멀티미디어 유연성\",\n                        \"price\": \"41000.00\",\n                        \"quantity\": 3,\n                        \"total_amount\": \"123000.00\"\n                    },\n                    {\n                        \"id\": 5,\n                        \"book_id\": 25,\n                        \"book_title\": \"디지털화된 물류 함수\",\n                        \"price\": \"15000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"30000.00\"\n                    },\n                    {\n                        \"id\": 3,\n                        \"book_id\": 53,\n                        \"book_title\": \"원활한 보조 회로\",\n                        \"price\": \"39000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"78000.00\"\n                    },\n                    {\n                        \"id\": 2,\n                        \"book_id\": 60,\n                        \"book_title\": \"설정 가능한 하이브리드 모니터링\",\n                        \"price\": \"10000.00\",\n                        \"quantity\": 3,\n                        \"total_amount\": \"30000.00\"\n                    },\n                    {\n                        \"id\": 6,\n                        \"book_id\": 67,\n                        \"book_title\": \"중심이 환경 친화적 안내 창구\",\n                        \"price\": \"39000.00\",\n                        \"quantity\": 1,\n                        \"total_amount\": \"39000.00\"\n                    }\n                ],\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 3,\n                \"user_id\": 17,\n                \"order_date\": \"2025-04-24T05:20:28\",\n                \"total_amount\": \"150000.00\",\n                \"status\": \"ARRIVED\",\n                \"items\": [\n                    {\n                        \"id\": 8,\n                        \"book_id\": 17,\n                        \"book_title\": \"원활한 안정적 정책\",\n                        \"price\": \"18000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"36000.00\"\n                    },\n                    {\n                        \"id\": 9,\n                        \"book_id\": 37,\n                        \"book_title\": \"가상 고단계 어댑터\",\n                        \"price\": \"21000.00\",\n                        \"quantity\": 1,\n                        \"total_amount\": \"21000.00\"\n                    },\n                    {\n                        \"id\": 7,\n                        \"book_id\": 71,\n                        \"book_title\": \"1:1 헌신적 엑스트라넷\",\n                        \"price\": \"31000.00\",\n                        \"quantity\": 3,\n                        \"total_amount\": \"93000.00\"\n                    }\n                ],\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 4,\n                \"user_id\": 2,\n                \"order_date\": \"2025-05-28T12:33:06\",\n                \"total_amount\": \"182000.00\",\n                \"status\": \"CREATED\",\n                \"items\": [\n                    {\n                        \"id\": 12,\n                        \"book_id\": 21,\n                        \"book_title\": \"효율적인 결합된 보안구역\",\n                        \"price\": \"19000.00\",\n                        \"quantity\": 1,\n                        \"total_amount\": \"19000.00\"\n                    },\n                    {\n                        \"id\": 10,\n                        \"book_id\": 31,\n                        \"book_title\": \"복제된 수요 중심 분석\",\n                        \"price\": \"27000.00\",\n                        \"quantity\": 3,\n                        \"total_amount\": \"81000.00\"\n                    },\n                    {\n                        \"id\": 13,\n                        \"book_id\": 40,\n                        \"book_title\": \"무결점의 취약점 아카이브\",\n                        \"price\": \"27000.00\",\n                        \"quantity\": 1,\n                        \"total_amount\": \"27000.00\"\n                    },\n                    {\n                        \"id\": 14,\n                        \"book_id\": 71,\n                        \"book_title\": \"1:1 헌신적 엑스트라넷\",\n                        \"price\": \"31000.00\",\n                        \"quantity\": 1,\n                        \"total_amount\": \"31000.00\"\n                    },\n                    {\n                        \"id\": 11,\n                        \"book_id\": 91,\n                        \"book_title\": \"디지털화된 해답 기반 데이터베이스\",\n                        \"price\": \"12000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"24000.00\"\n                    }\n                ],\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 5,\n                \"user_id\": 38,\n                \"order_date\": \"2025-07-27T05:52:45\",\n                \"total_amount\": \"88000.00\",\n                \"status\": \"SHIPPED\",\n                \"items\": [\n                    {\n                        \"id\": 15,\n                        \"book_id\": 83,\n                        \"book_title\": \"다중 주파수 멀티미디어 프로토콜\",\n                        \"price\": \"44000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"88000.00\"\n                    }\n                ],\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 6,\n                \"user_id\": 23,\n                \"order_date\": \"2025-08-17T22:42:57\",\n                \"total_amount\": \"288000.00\",\n                \"status\": \"SHIPPED\",\n                \"items\": [\n                    {\n                        \"id\": 17,\n                        \"book_id\": 35,\n                        \"book_title\": \"모니터링되는 합성물 어댑터\",\n                        \"price\": \"37000.00\",\n                        \"quantity\": 3,\n                        \"total_amount\": \"111000.00\"\n                    },\n                    {\n                        \"id\": 18,\n                        \"book_id\": 54,\n                        \"book_title\": \"가상 국가적 에뮬레이션\",\n                        \"price\": \"38000.00\",\n                        \"quantity\": 1,\n                        \"total_amount\": \"38000.00\"\n                    },\n                    {\n                        \"id\": 20,\n                        \"book_id\": 61,\n                        \"book_title\": \"더 작아진 가치추가 예보\",\n                        \"price\": \"41000.00\",\n                        \"quantity\": 1,\n                        \"total_amount\": \"41000.00\"\n                    },\n                    {\n                        \"id\": 19,\n                        \"book_id\": 62,\n                        \"book_title\": \"효율적인 해답 기반 엔진\",\n                        \"price\": \"37000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"74000.00\"\n                    },\n                    {\n                        \"id\": 16,\n                        \"book_id\": 91,\n                        \"book_title\": \"디지털화된 해답 기반 데이터베이스\",\n                        \"price\": \"12000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"24000.00\"\n                    }\n                ],\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 7,\n                \"user_id\": 49,\n                \"order_date\": \"2025-07-07T10:33:57\",\n                \"total_amount\": \"256000.00\",\n                \"status\": \"ARRIVED\",\n                \"items\": [\n                    {\n                        \"id\": 23,\n                        \"book_id\": 9,\n                        \"book_title\": \"독보적인 고도 기반 모니터링\",\n                        \"price\": \"40000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"80000.00\"\n                    },\n                    {\n                        \"id\": 22,\n                        \"book_id\": 18,\n                        \"book_title\": \"무결점의 결합된 예보\",\n                        \"price\": \"13000.00\",\n                        \"quantity\": 3,\n                        \"total_amount\": \"39000.00\"\n                    },\n                    {\n                        \"id\": 24,\n                        \"book_id\": 36,\n                        \"book_title\": \"비즈니스 중점적 비동기 어플리케이\",\n                        \"price\": \"45000.00\",\n                        \"quantity\": 1,\n                        \"total_amount\": \"45000.00\"\n                    },\n                    {\n                        \"id\": 21,\n                        \"book_id\": 96,\n                        \"book_title\": \"모니터링되는 무해한 인트라넷\",\n                        \"price\": \"15000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"30000.00\"\n                    },\n                    {\n                        \"id\": 25,\n                        \"book_id\": 99,\n                        \"book_title\": \"낮은 요약 지식 기반\",\n                        \"price\": \"31000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"62000.00\"\n                    }\n                ],\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 8,\n                \"user_id\": 27,\n                \"order_date\": \"2025-03-06T03:26:30\",\n                \"total_amount\": \"324000.00\",\n                \"status\": \"ARRIVED\",\n                \"items\": [\n                    {\n                        \"id\": 29,\n                        \"book_id\": 20,\n                        \"book_title\": \"안정적인 지역적 예보\",\n                        \"price\": \"10000.00\",\n                        \"quantity\": 3,\n                        \"total_amount\": \"30000.00\"\n                    },\n                    {\n                        \"id\": 30,\n                        \"book_id\": 58,\n                        \"book_title\": \"최적화된 4세대 그룹웨어\",\n                        \"price\": \"36000.00\",\n                        \"quantity\": 3,\n                        \"total_amount\": \"108000.00\"\n                    },\n                    {\n                        \"id\": 28,\n                        \"book_id\": 63,\n                        \"book_title\": \"진보적인 수요 중심 모델\",\n                        \"price\": \"23000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"46000.00\"\n                    },\n                    {\n                        \"id\": 26,\n                        \"book_id\": 75,\n                        \"book_title\": \"자가 이용 가능한 해답 기반 인트\",\n                        \"price\": \"30000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"60000.00\"\n                    },\n                    {\n                        \"id\": 27,\n                        \"book_id\": 85,\n                        \"book_title\": \"진보적인 휴리스틱 예보\",\n                        \"price\": \"40000.00\",\n                        \"quantity\": 2,\n                        \"total_amount\": \"80000.00\"\n                    }\n                ],\n                \"created_at\": \"2025-12-14T19:58:37\"\n            }\n        ],\n        \"total\": 52,\n        \"page\": 1,\n        \"size\": 10\n    },\n    \"message\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "정산 데이터 생성",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/settlements/calculate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"settlements",
+								"calculate"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 정산 데이터 생성",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/admin/settlements/calculate",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"admin",
+										"settlements",
+										"calculate"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 13:08:30 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "216"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"created_settlements\": 10,\n        \"total_processed_orders\": 94,\n        \"message\": \"Successfully created 10 settlements for 94 order items\"\n    },\n    \"message\": \"Successfully created 10 settlements for 94 order items\"\n}"
+						}
+					]
+				},
+				{
+					"name": "전체 사용자 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/?page=1&size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "keyword",
+									"value": "홍길동",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 전체 사용자 조회",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/users/?page=1&size=10",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"users",
+										""
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										},
+										{
+											"key": "keyword",
+											"value": "홍길동",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 13:09:14 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "2675"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"users\": [\n            {\n                \"id\": 1,\n                \"email\": \"admin@bookstore.com\",\n                \"name\": \"관리자\",\n                \"role\": \"admin\",\n                \"birth_date\": \"1990-01-01\",\n                \"gender\": \"남성\",\n                \"address\": \"서울시 강남구 테헤란로 123\",\n                \"phone_number\": \"010-1234-5678\",\n                \"is_active\": true,\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 2,\n                \"email\": \"user1@daum.net\",\n                \"name\": \"이상현\",\n                \"role\": \"user\",\n                \"birth_date\": \"1993-12-25\",\n                \"gender\": \"남성\",\n                \"address\": \"울산광역시 중구 학동길 617\",\n                \"phone_number\": \"02-8386-3794\",\n                \"is_active\": true,\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 3,\n                \"email\": \"user2@gmail.com\",\n                \"name\": \"김영자\",\n                \"role\": \"user\",\n                \"birth_date\": \"1969-09-05\",\n                \"gender\": \"남성\",\n                \"address\": \"전라남도 부천시 개포로 619-34\",\n                \"phone_number\": \"031-781-6184\",\n                \"is_active\": true,\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 4,\n                \"email\": \"user3@nate.com\",\n                \"name\": \"한경희\",\n                \"role\": \"user\",\n                \"birth_date\": \"1967-01-11\",\n                \"gender\": \"여성\",\n                \"address\": \"부산광역시 남구 봉은사가 지하465 (성현이장동)\",\n                \"phone_number\": \"016-283-2764\",\n                \"is_active\": true,\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 5,\n                \"email\": \"user4@hanmail.net\",\n                \"name\": \"홍지영\",\n                \"role\": \"user\",\n                \"birth_date\": \"1967-02-02\",\n                \"gender\": \"남성\",\n                \"address\": \"대전광역시 서대문구 학동9거리 지하672\",\n                \"phone_number\": \"063-672-4238\",\n                \"is_active\": true,\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 6,\n                \"email\": \"user5@naver.com\",\n                \"name\": \"이은경\",\n                \"role\": \"user\",\n                \"birth_date\": \"1974-02-19\",\n                \"gender\": \"남성\",\n                \"address\": \"제주특별자치도 철원군 도산대로 812-88\",\n                \"phone_number\": \"061-916-6978\",\n                \"is_active\": true,\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 7,\n                \"email\": \"user6@naver.com\",\n                \"name\": \"고경숙\",\n                \"role\": \"user\",\n                \"birth_date\": \"1993-02-23\",\n                \"gender\": \"남성\",\n                \"address\": \"대전광역시 성동구 선릉7로 781-23 (지연이마을)\",\n                \"phone_number\": \"016-325-2880\",\n                \"is_active\": true,\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 8,\n                \"email\": \"user7@nate.com\",\n                \"name\": \"김성호\",\n                \"role\": \"seller\",\n                \"birth_date\": \"2007-03-04\",\n                \"gender\": \"남성\",\n                \"address\": \"인천광역시 중구 석촌호수로 836 (현주박읍)\",\n                \"phone_number\": \"041-782-4896\",\n                \"is_active\": true,\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 9,\n                \"email\": \"user8@hanmail.net\",\n                \"name\": \"권정순\",\n                \"role\": \"user\",\n                \"birth_date\": \"1992-09-26\",\n                \"gender\": \"남성\",\n                \"address\": \"전라남도 속초시 봉은사3로 603-71 (서현김동)\",\n                \"phone_number\": \"044-105-1834\",\n                \"is_active\": true,\n                \"created_at\": \"2025-12-14T19:58:37\"\n            },\n            {\n                \"id\": 10,\n                \"email\": \"user9@dreamwiz.com\",\n                \"name\": \"김진우\",\n                \"role\": \"user\",\n                \"birth_date\": \"1985-03-20\",\n                \"gender\": \"여성\",\n                \"address\": \"충청남도 영월군 논현1가 421-60 (영숙나동)\",\n                \"phone_number\": \"031-651-3338\",\n                \"is_active\": true,\n                \"created_at\": \"2025-12-14T19:58:37\"\n            }\n        ],\n        \"total\": 51,\n        \"page\": 1,\n        \"size\": 10\n    },\n    \"message\": null\n}"
+						},
+						{
+							"name": "403 - 어드민 권한 요청",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/users/?page=1&size=10",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"users",
+										""
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "size",
+											"value": "10"
+										},
+										{
+											"key": "keyword",
+											"value": "홍길동",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"status": "Forbidden",
+							"code": 403,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:23:58 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "138"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:23:58\",\n    \"path\": \"/users/\",\n    \"status\": 403,\n    \"code\": \"AUTH_FORBIDDEN\",\n    \"message\": \"Admin access required\",\n    \"details\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "사용자 권한 변경",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"role\": \"seller\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users/2/role",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"2",
+								"role"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 사용자 권한 변경",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"role\": \"seller\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/users/2/role",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"users",
+										"2",
+										"role"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 13:09:48 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "314"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 2,\n        \"email\": \"user1@daum.net\",\n        \"name\": \"이상현\",\n        \"role\": \"seller\",\n        \"birth_date\": \"1993-12-25\",\n        \"gender\": \"남성\",\n        \"address\": \"울산광역시 중구 학동길 617\",\n        \"phone_number\": \"02-8386-3794\",\n        \"is_active\": true,\n        \"created_at\": \"2025-12-14T19:58:37\"\n    },\n    \"message\": \"User role updated successfully\"\n}"
+						},
+						{
+							"name": "403 - 어드민 권한 요청",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"role\": \"seller\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/users/2/role",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"users",
+										"2",
+										"role"
+									]
+								}
+							},
+							"status": "Forbidden",
+							"code": 403,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:27:03 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "144"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:27:03\",\n    \"path\": \"/users/2/role\",\n    \"status\": 403,\n    \"code\": \"AUTH_FORBIDDEN\",\n    \"message\": \"Admin access required\",\n    \"details\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "사용자 비활성화",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/2/deactivate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"2",
+								"deactivate"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 사용자 비활성화",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/users/2/deactivate",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"users",
+										"2",
+										"deactivate"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 13:10:12 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "322"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 2,\n        \"email\": \"user1@daum.net\",\n        \"name\": \"이상현\",\n        \"role\": \"seller\",\n        \"birth_date\": \"1993-12-25\",\n        \"gender\": \"남성\",\n        \"address\": \"울산광역시 중구 학동길 617\",\n        \"phone_number\": \"02-8386-3794\",\n        \"is_active\": false,\n        \"created_at\": \"2025-12-14T19:58:37\"\n    },\n    \"message\": \"User account deactivated successfully\"\n}"
+						},
+						{
+							"name": "403 - 어드민 권한 요청",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/users/2/deactivate",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"users",
+										"2",
+										"deactivate"
+									]
+								}
+							},
+							"status": "Forbidden",
+							"code": 403,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 12:28:07 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "150"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T12:28:07\",\n    \"path\": \"/users/2/deactivate\",\n    \"status\": 403,\n    \"code\": \"AUTH_FORBIDDEN\",\n    \"message\": \"Admin access required\",\n    \"details\": null\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "11. sales",
+			"item": [
+				{
+					"name": "할인 생성",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"sale_name\": \"크리스마스 기념 할인\",\r\n  \"discount_rate\": 1,\r\n  \"started_at\": \"2025-12-14T13:12:32.323Z\",\r\n  \"ended_at\": \"2025-12-14T13:12:52.323Z\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/sales/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"sales",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "201 - 할인 생성 성공",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"sale_name\": \"크리스마스 기념 할인\",\r\n  \"discount_rate\": 1,\r\n  \"started_at\": \"2025-12-14T13:12:32.323Z\",\r\n  \"ended_at\": \"2025-12-14T13:12:52.323Z\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/sales/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"sales",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 13:15:11 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "279"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 1,\n        \"sale_name\": \"크리스마스 기념 할인\",\n        \"seller_id\": 11,\n        \"discount_rate\": \"1.00\",\n        \"started_at\": \"2025-12-14T13:12:32\",\n        \"ended_at\": \"2025-12-14T13:12:52\",\n        \"status\": \"INACTIVE\",\n        \"created_at\": \"2025-12-14T22:15:11\"\n    },\n    \"message\": \"Sale created successfully\"\n}"
+						},
+						{
+							"name": "404 - 셀러 프로파일 없이 생성시도",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"sale_name\": \"크리스마스 기념 할인\",\r\n  \"discount_rate\": 1,\r\n  \"started_at\": \"2025-12-14T13:12:32.323Z\",\r\n  \"ended_at\": \"2025-12-14T13:12:52.323Z\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/sales/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"sales",
+										""
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 13:14:05 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "143"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T13:14:05\",\n    \"path\": \"/sales/\",\n    \"status\": 404,\n    \"code\": \"SELLER_NOT_FOUND\",\n    \"message\": \"Seller profile not found\",\n    \"details\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "할인 책 추가",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"book_id\": 102\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/sales/1/books",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"sales",
+								"1",
+								"books"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - 할인 책 추가 완료",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"book_id\": 102\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/sales/1/books",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"sales",
+										"1",
+										"books"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 13:20:51 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "272"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": 1,\n        \"sale_name\": \"크리스마스 기념 할인\",\n        \"seller_id\": 11,\n        \"discount_rate\": \"1.00\",\n        \"started_at\": \"2025-12-14T13:12:32\",\n        \"ended_at\": \"2025-12-14T13:12:52\",\n        \"status\": \"INACTIVE\",\n        \"created_at\": \"2025-12-14T22:15:11\"\n    },\n    \"message\": \"Book added to sale\"\n}"
+						},
+						{
+							"name": "403 - 미보유책 할인 시도",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"book_id\": 10\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/sales/1/books",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"sales",
+										"1",
+										"books"
+									]
+								}
+							},
+							"status": "Forbidden",
+							"code": 403,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "date",
+									"value": "Sun, 14 Dec 2025 13:17:27 GMT"
+								},
+								{
+									"key": "server",
+									"value": "uvicorn"
+								},
+								{
+									"key": "content-length",
+									"value": "147"
+								},
+								{
+									"key": "content-type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"timestamp\": \"2025-12-14T13:17:27\",\n    \"path\": \"/sales/1/books\",\n    \"status\": 403,\n    \"code\": \"BOOK_NOT_OWNED\",\n    \"message\": \"You don't own this book\",\n    \"details\": null\n}"
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://113.198.66.75:10085"
+		},
+		{
+			"key": "access_token",
+			"value": ""
+		},
+		{
+			"key": "refresh_token",
+			"value": ""
+		}
+	]
+}

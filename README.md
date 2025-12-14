@@ -17,7 +17,7 @@
 | **DBMS** | MySQL 8.0 |
 | **Cache** | Redis (랭킹 캐싱) |
 | **DB Name** | bookStoreDb |
-| **API 개수** | 40개 엔드포인트 |
+| **API 개수** | 36개 엔드포인트 |
 | **Python** | 3.12 |
 | **Framework** | FastAPI |
 
@@ -48,10 +48,13 @@ cp .env.example .env
 # 2. 컨테이너 빌드 및 실행
 docker-compose up --build
 
-# 3. 시드 데이터 생성 (선택)
+# 3. 데이터베이스 마이그레이션 (Alembic 사용 시)
+docker-compose exec app alembic upgrade head
+
+# 4. 시드 데이터 생성 (선택)
 docker-compose exec app python scripts/seed.py
 
-# 4. API 문서 확인
+# 5. API 문서 확인
 # http://localhost:8000/docs
 ```
 
@@ -366,7 +369,9 @@ repo-root/
 
 ---
 
-## 엔드포인트 요약표 (Total: 40)
+## 엔드포인트 요약표 (Total: 36)
+
+> Postman 컬렉션에서 직접 테스트 완료된 API 목록입니다.
 
 ### 1. 인증 (Auth) - 4개
 | Method | URL | 설명 | 권한 |
@@ -382,22 +387,22 @@ repo-root/
 | GET | `/users/me` | 내 프로필 조회 | User/Seller/Admin |
 | PATCH | `/users/me` | 내 프로필 수정 | User/Seller/Admin |
 | POST | `/users/me/password` | 비밀번호 변경 | User/Seller/Admin |
-| GET | `/users` | 전체 회원 목록 | Admin |
+| GET | `/users/` | 전체 회원 목록 | Admin |
 | PATCH | `/users/{user_id}/role` | 회원 권한 변경 | Admin |
 | PATCH | `/users/{user_id}/deactivate` | 계정 비활성화 | Admin |
 
 ### 3. 판매자 (Sellers) - 3개
 | Method | URL | 설명 | 권한 |
 |--------|-----|------|------|
-| POST | `/sellers` | 판매자 등록 신청 | User |
+| POST | `/sellers/` | 판매자 등록 신청 | User |
 | GET | `/sellers/me` | 내 판매자 정보 조회 | Seller |
-| PATCH | `/sellers/me` | 판매자 정보 수정 | Seller |
+| GET | `/settlements/` | 내 정산 내역 조회 | Seller |
 
 ### 4. 도서 (Books) - 5개
 | Method | URL | 설명 | 권한 |
 |--------|-----|------|------|
-| POST | `/books` | 도서 등록 | Seller |
-| GET | `/books` | 도서 목록 조회 (검색, 정렬, 필터) | Anyone |
+| POST | `/books/` | 도서 등록 | Seller |
+| GET | `/books/` | 도서 목록 조회 (검색, 정렬, 필터) | Anyone |
 | GET | `/books/{book_id}` | 도서 상세 조회 | Anyone |
 | PUT | `/books/{book_id}` | 도서 정보 수정 | Seller (본인) |
 | DELETE | `/books/{book_id}` | 도서 삭제 (SOLDOUT) | Seller (본인) |
@@ -405,56 +410,52 @@ repo-root/
 ### 5. 장바구니 (Carts) - 4개
 | Method | URL | 설명 | 권한 |
 |--------|-----|------|------|
-| GET | `/carts` | 내 장바구니 조회 | User |
-| POST | `/carts` | 장바구니 담기 | User |
+| GET | `/carts/` | 내 장바구니 조회 | User |
+| POST | `/carts/` | 장바구니 담기 | User |
 | PATCH | `/carts/{cart_id}` | 수량 변경 | User |
 | DELETE | `/carts/{cart_id}` | 장바구니 아이템 삭제 | User |
 
 ### 6. 주문 (Orders) - 4개
 | Method | URL | 설명 | 권한 |
 |--------|-----|------|------|
-| POST | `/orders` | 주문 생성 | User |
-| GET | `/orders` | 내 주문 내역 조회 | User |
-| GET | `/orders/{order_id}` | 주문 상세 조회 | User |
-| POST | `/orders/{order_id}/cancel` | 주문 취소 | User |
+| POST | `/orders/` | 주문 생성 (장바구니 → 주문) | User |
+| GET | `/orders/` | 내 주문 내역 조회 | User |
+| GET | `/orders/{order_id}` | 주문 상세 조회 | User (본인) |
+| POST | `/orders/{order_id}/cancel` | 주문 취소 | User (본인) |
 
-### 7. 리뷰 (Reviews) - 5개
+### 7. 리뷰 (Reviews) - 4개
 | Method | URL | 설명 | 권한 |
 |--------|-----|------|------|
-| POST | `/books/{book_id}/reviews` | 리뷰 작성 | User (구매자) |
+| POST | `/books/{book_id}/reviews` | 리뷰 작성 (구매자만) | User |
 | GET | `/books/{book_id}/reviews` | 리뷰 목록 조회 | Anyone |
-| PATCH | `/books/{book_id}/reviews/{review_id}` | 리뷰 수정 | User (작성자) |
-| PATCH | `/reviews/{review_id}` | 리뷰 수정 (레거시) | User (작성자) |
-| DELETE | `/reviews/{review_id}` | 리뷰 삭제 | User (작성자)/Admin |
+| PATCH | `/reviews/{review_id}` | 리뷰 수정 | User (본인) |
+| DELETE | `/reviews/{review_id}` | 리뷰 삭제 | User (본인)/Admin |
 
 ### 8. 찜하기 (Favorites) - 3개
 | Method | URL | 설명 | 권한 |
 |--------|-----|------|------|
-| POST | `/books/{book_id}/favorites` | 찜하기 등록 | User |
-| DELETE | `/books/{book_id}/favorites` | 찜하기 취소 | User |
-| GET | `/favorites` | 내 찜 목록 조회 | User |
+| POST | `/books/{book_id}/favorites/` | 찜 추가 | User |
+| GET | `/favorites/` | 내 찜 목록 조회 | User |
+| DELETE | `/books/{book_id}/favorites` | 찜 취소 | User |
 
-### 9. 랭킹 (Rankings) - 1개
+### 9. 랭킹 (Rankings) - 2개
 | Method | URL | 설명 | 권한 |
 |--------|-----|------|------|
-| GET | `/rankings` | 랭킹 조회 (type, ageGroup, gender, limit) | Anyone |
+| GET | `/rankings/?type=purchaseCount` | 판매량 순 랭킹 조회 | Anyone |
+| GET | `/rankings/?type=averageRating` | 평점 순 랭킹 조회 | Anyone |
 
 ### 10. 세일 (Sales) - 2개
 | Method | URL | 설명 | 권한 |
 |--------|-----|------|------|
-| POST | `/sales` | 타임 세일 생성 | Seller |
-| POST | `/sales/{sale_id}/books` | 세일 도서 추가 | Seller |
+| POST | `/sales/` | 타임 세일 생성 | Seller |
+| POST | `/sales/{sale_id}/books` | 세일에 책 추가 | Seller |
 
-### 11. 정산 (Settlements) - 1개
-| Method | URL | 설명 | 권한 |
-|--------|-----|------|------|
-| GET | `/settlements` | 정산 내역 조회 | Seller |
-
-### 12. 관리자 (Admin) - 2개
+### 11. 관리자 (Admin) - 3개
 | Method | URL | 설명 | 권한 |
 |--------|-----|------|------|
 | GET | `/admin/orders` | 전체 주문 현황 | Admin |
 | POST | `/admin/settlements/calculate` | 정산 데이터 생성 | Admin |
+| GET | `/users/` | 전체 사용자 조회 | Admin |
 
 ---
 
