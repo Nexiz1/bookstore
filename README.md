@@ -213,6 +213,159 @@ Redis:
 
 ---
 
+## 프로젝트 구조
+
+```
+repo-root/
+├── README.md                          # 프로젝트 개요 및 실행 방법
+├── .gitignore                         # Git 제외 파일
+├── .env.example                       # 환경변수 템플릿
+├── requirements.txt                   # Python 의존성
+├── pyproject.toml                     # Python 프로젝트 설정
+├── pytest.ini                         # pytest 설정
+├── docker-compose.yml                 # Docker Compose 설정
+├── Dockerfile                         # Docker 이미지 빌드
+├── alembic.ini                        # Alembic 설정
+│
+├── docs/                              # 📁 문서
+│   ├── api-design.md                  # API 설계 문서
+│   ├── db-schema.md                   # 데이터베이스 스키마 (ERD)
+│   └── architecture.md                # 아키텍처 설계 문서
+│
+├── postman/                           # 📁 Postman 컬렉션
+│   └── BookStore-API.postman_collection.json
+│
+├── scripts/                           # 📁 유틸리티 스크립트
+│   ├── __init__.py
+│   └── seed.py                        # 시드 데이터 생성
+│
+├── alembic/                           # 📁 데이터베이스 마이그레이션
+│   ├── env.py
+│   ├── script.py.mako
+│   └── versions/                      # 마이그레이션 파일들
+│
+├── tests/                             # 📁 테스트 (109개, 100% 통과)
+│   ├── conftest.py                    # 공통 픽스처 및 헬퍼
+│   ├── test_auth.py                   # 인증 테스트
+│   ├── test_users.py                  # 사용자 테스트
+│   ├── test_sellers.py                # 판매자 테스트
+│   ├── test_books.py                  # 도서 테스트
+│   ├── test_carts.py                  # 장바구니 테스트
+│   ├── test_orders.py                 # 주문 테스트
+│   ├── test_reviews.py                # 리뷰 테스트
+│   ├── test_favorites.py              # 찜하기 테스트
+│   ├── test_rankings.py               # 랭킹 테스트
+│   └── test_admin.py                  # 관리자 테스트
+│
+└── app/                               # 📁 애플리케이션 소스
+    ├── __init__.py
+    ├── main.py                        # FastAPI 앱 진입점
+    │
+    ├── api/                           # 📁 API 라우터
+    │   ├── dependencies.py            # 의존성 주입 (인증, DB 세션)
+    │   └── routers/
+    │       ├── auth.py                # 인증 API
+    │       ├── users.py               # 사용자 API
+    │       ├── sellers.py             # 판매자 API
+    │       ├── books.py               # 도서 API
+    │       ├── carts.py               # 장바구니 API
+    │       ├── orders.py              # 주문 API
+    │       ├── reviews.py             # 리뷰 API
+    │       ├── favorites.py           # 찜하기 API
+    │       ├── rankings.py            # 랭킹 API
+    │       ├── sales.py               # 세일 API
+    │       └── admin.py               # 관리자 API
+    │
+    ├── core/                          # 📁 핵심 설정
+    │   ├── config.py                  # 환경변수 로드
+    │   ├── database.py                # SQLAlchemy 설정
+    │   ├── redis.py                   # Redis 연결
+    │   └── security.py                # JWT, 비밀번호 해싱
+    │
+    ├── models/                        # 📁 데이터베이스 모델 (ORM)
+    │   ├── user.py
+    │   ├── seller.py
+    │   ├── book.py
+    │   ├── cart.py
+    │   ├── order.py
+    │   ├── order_item.py
+    │   ├── review.py
+    │   ├── favorite.py
+    │   ├── ranking.py
+    │   ├── sale.py
+    │   ├── settlement.py
+    │   └── settlement_order.py
+    │
+    ├── schemas/                       # 📁 Pydantic 스키마 (DTO)
+    │   ├── user.py
+    │   ├── seller.py
+    │   ├── book.py
+    │   ├── cart.py
+    │   ├── order.py
+    │   ├── review.py
+    │   ├── favorite.py
+    │   ├── ranking.py
+    │   ├── sale.py
+    │   ├── settlement.py
+    │   └── response.py                # 공통 응답 스키마
+    │
+    ├── services/                      # 📁 비즈니스 로직
+    │   ├── auth_service.py
+    │   ├── user_service.py
+    │   ├── seller_service.py
+    │   ├── book_service.py
+    │   ├── cart_service.py
+    │   ├── order_service.py
+    │   ├── review_service.py
+    │   ├── favorite_service.py
+    │   ├── ranking_service.py
+    │   ├── sale_service.py
+    │   └── settlement_service.py
+    │
+    ├── repositories/                  # 📁 데이터 접근 계층
+    │   ├── user_repository.py
+    │   ├── seller_repository.py
+    │   ├── book_repository.py
+    │   ├── cart_repository.py
+    │   ├── order_repository.py
+    │   ├── review_repository.py
+    │   ├── favorite_repository.py
+    │   ├── ranking_repository.py
+    │   ├── sale_repository.py
+    │   └── settlement_repository.py
+    │
+    ├── exceptions/                    # 📁 커스텀 예외
+    │   ├── auth_exceptions.py
+    │   ├── user_exceptions.py
+    │   ├── seller_exceptions.py
+    │   ├── book_exceptions.py
+    │   ├── cart_exceptions.py
+    │   ├── order_exceptions.py
+    │   └── review_exceptions.py
+    │
+    ├── middleware/                    # 📁 미들웨어
+    │   ├── logging_middleware.py      # 요청/응답 로깅
+    │   └── exception_handler.py       # 전역 예외 처리
+    │
+    └── utils/                         # 📁 유틸리티
+        └── scheduler.py               # APScheduler (랭킹 갱신)
+```
+
+### 주요 디렉터리 설명
+
+- **`docs/`**: API 설계, DB 스키마, 아키텍처 문서
+- **`postman/`**: Postman 컬렉션 (API 테스트용)
+- **`scripts/`**: 시드 데이터 생성 등 유틸리티 스크립트
+- **`tests/`**: 109개 테스트 (100% 통과)
+- **`app/api/`**: FastAPI 라우터 (엔드포인트 정의)
+- **`app/core/`**: 설정, DB 연결, Redis, JWT 등 핵심 기능
+- **`app/models/`**: SQLAlchemy ORM 모델
+- **`app/schemas/`**: Pydantic 스키마 (요청/응답 검증)
+- **`app/services/`**: 비즈니스 로직 계층
+- **`app/repositories/`**: 데이터 접근 추상화 계층
+
+---
+
 ## 엔드포인트 요약표 (Total: 40)
 
 ### 1. 인증 (Auth) - 4개
