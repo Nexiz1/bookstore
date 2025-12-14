@@ -81,14 +81,14 @@ class SettlementService:
 
         # 4. 판매자별 정산 생성
         for seller_id, items in seller_orders.items():
-            # 매출 합계 계산
-            total_sales = sum(item.total_amount for item in items)
+            # 매출 합계 계산 (Decimal로 변환하여 정확한 연산)
+            total_sales = Decimal(sum(item.total_amount for item in items))
 
             # 수수료 계산 (10%)
-            commission = total_sales * COMMISSION_RATE
+            commission = (total_sales * COMMISSION_RATE).quantize(Decimal("0.01"))
 
             # 최종 정산액
-            final_payout = total_sales - commission
+            final_payout = (total_sales - commission).quantize(Decimal("0.01"))
 
             # 정산 레코드 생성
             settlement = self.settlement_repo.create(

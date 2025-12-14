@@ -180,44 +180,78 @@ class RankingService:
 
         This method is called by the scheduler every 10 minutes.
         It calculates rankings for both purchase count and average rating,
-        and caches them in Redis.
+        creates Ranking records in DB, and caches them in Redis.
 
         Args:
             db: Database session.
         """
         logger.info("Starting ranking calculation and caching...")
 
+        from app.models.book import Book
+
         redis_client = await get_redis_client()
         ranking_repo = RankingRepository(db)
 
+        # 1. 기존 랭킹 데이터 삭제
+        ranking_repo.delete_all(commit=True)
+        logger.info("Deleted existing rankings")
+
         ranking_types = [
-            (RankingType.PURCHASE_COUNT, "purchaseCount"),
-            (RankingType.AVERAGE_RATING, "averageRating"),
+            (RankingType.PURCHASE_COUNT, "purchaseCount", "purchase_count"),
+            (RankingType.AVERAGE_RATING, "averageRating", "average_rating"),
         ]
 
-        for ranking_type, type_value in ranking_types:
+        for ranking_type, type_value, order_by_column in ranking_types:
             try:
-                # Fetch Top 10 rankings from database
-                rankings = ranking_repo.get_rankings(
-                    ranking_type=type_value,
-                    age_group=None,  # ALL
-                    gender=None,  # ALL
-                    limit=10,
-                )
+                # 2. Book 테이블에서 상위 10개 조회
+                if order_by_column == "purchase_count":
+                    top_books = (
+                        db.query(Book)
+                        .filter(Book.status == "ONSALE")
+                        .order_by(Book.purchase_count.desc())
+                        .limit(10)
+                        .all()
+                    )
+                else:  # average_rating
+                    top_books = (
+                        db.query(Book)
+                        .filter(Book.status == "ONSALE")
+                        .filter(Book.review_count > 0)  # 리뷰가 있는 도서만
+                        .order_by(Book.average_rating.desc())
+                        .limit(10)
+                        .all()
+                    )
 
+                # 3. Ranking 테이블에 데이터 삽입
                 ranking_items = []
-                for r in rankings:
+                for idx, book in enumerate(top_books, start=1):
+                    ranking_data = {
+                        "ranking_type": type_value,
+                        "rank": idx,
+                        "book_id": book.id,
+                        "purchase_count": book.purchase_count,
+                        "average_rating": book.average_rating,
+                        "age_group": "ALL",
+                        "gender": "ALL",
+                    }
+                    ranking_repo.create(ranking_data, commit=False)
+
                     ranking_items.append(
                         RankingItemResponse(
-                            rank=r.rank,
-                            book_id=r.book_id,
-                            book_title=r.book.title if r.book else "Unknown",
-                            book_author=r.book.author if r.book else "Unknown",
-                            purchase_count=r.purchase_count,
-                            average_rating=r.average_rating,
+                            rank=idx,
+                            book_id=book.id,
+                            book_title=book.title,
+                            book_author=book.author,
+                            purchase_count=book.purchase_count,
+                            average_rating=book.average_rating,
                         )
                     )
 
+                # 4. DB 커밋
+                db.commit()
+                logger.info(f"Created {len(ranking_items)} ranking records for {type_value}")
+
+                # 5. Redis 캐싱
                 response = RankingListResponse(
                     ranking_type=ranking_type,
                     age_group=None,
@@ -225,7 +259,6 @@ class RankingService:
                     rankings=ranking_items,
                 )
 
-                # Cache to Redis
                 cache_key = RedisKeys.ranking_key(type_value, "ALL", "ALL")
                 cache_data = json.dumps(response.model_dump(), cls=DecimalEncoder)
                 await redis_client.setex(cache_key, RANKING_CACHE_TTL, cache_data)
@@ -233,6 +266,7 @@ class RankingService:
                 logger.info(f"Cached {len(ranking_items)} items for {type_value} ranking")
 
             except Exception as e:
-                logger.error(f"Error caching {type_value} ranking: {e}")
+                db.rollback()
+                logger.error(f"Error calculating {type_value} ranking: {e}")
 
         logger.info("Ranking calculation and caching completed")

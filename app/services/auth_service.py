@@ -44,6 +44,10 @@ class AuthService:
         if not user:
             raise InvalidCredentialsException()
 
+        # 비활성화된 계정 체크
+        if not user.is_active:
+            raise InvalidCredentialsException("Account is deactivated")
+
         # 비밀번호 검증
         if not verify_password(password, user.password):
             raise InvalidCredentialsException()

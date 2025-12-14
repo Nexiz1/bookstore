@@ -114,9 +114,11 @@ class ReviewService:
         return True
 
     def _update_book_rating(self, book_id: int):
+        """도서 평점 및 리뷰 수 업데이트"""
         avg_rating, count = self.review_repo.get_average_rating(book_id)
         book = self.book_repo.get_by_id(book_id)
-        self.book_repo.update_stats(book, rating=avg_rating, review_count=count)
+        # commit=True를 명시하여 DB에 반영
+        self.book_repo.update_stats(book, rating=avg_rating, review_count=count, commit=True)
 
     def _build_review_response(self, review) -> ReviewResponse:
         return ReviewResponse(
