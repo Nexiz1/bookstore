@@ -25,3 +25,10 @@ class SettlementListResponse(BaseModel):
     """정산 목록 응답"""
     settlements: list[SettlementResponse]
     total: int
+
+
+class SettlementCalculateResponse(BaseModel):
+    """정산 계산 결과 응답"""
+    created_settlements: int
+    total_processed_orders: int
+    message: str

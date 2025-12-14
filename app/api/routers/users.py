@@ -76,3 +76,20 @@ def update_user_role(
     return SuccessResponse(
         data=UserResponse.model_validate(user), message="User role updated successfully"
     )
+
+
+@router.patch("/{user_id}/deactivate", response_model=SuccessResponse[UserResponse])
+def deactivate_user(
+    user_id: int,
+    admin_user: User = Depends(get_admin_user),
+    service: UserService = Depends(get_user_service),
+):
+    """사용자 계정 비활성화 - Admin only
+
+    비활성화된 계정은 로그인 및 API 접근이 차단됩니다.
+    관리자 계정은 비활성화할 수 없습니다.
+    """
+    user = service.deactivate_user(admin_user.id, user_id)
+    return SuccessResponse(
+        data=UserResponse.model_validate(user), message="User account deactivated successfully"
+    )

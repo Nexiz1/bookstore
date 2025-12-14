@@ -76,6 +76,10 @@ def get_current_user(
     if not user:
         raise UnauthorizedException("User not found")
 
+    # 계정 비활성화 여부 확인
+    if not user.is_active:
+        raise UnauthorizedException("Account is deactivated")
+
     return user
 
 

@@ -10,7 +10,7 @@ from app.exceptions.review_exceptions import (
 from app.repositories.book_repository import BookRepository
 from app.repositories.order_repository import OrderItemRepository
 from app.repositories.review_repository import ReviewRepository
-from app.schemas.review import ReviewCreate, ReviewListResponse, ReviewResponse
+from app.schemas.review import ReviewCreate, ReviewListResponse, ReviewResponse, ReviewUpdate
 
 
 class ReviewService:
@@ -69,6 +69,30 @@ class ReviewService:
         return ReviewListResponse(
             reviews=review_responses, total=total, average_rating=avg_rating
         )
+
+    def update_review(
+        self, user_id: int, review_id: int, update_data: ReviewUpdate
+    ) -> ReviewResponse:
+        """리뷰 수정 (작성자 본인만 가능)"""
+        review = self.review_repo.get_by_id(review_id)
+        if not review:
+            raise ReviewNotFoundException()
+
+        # 본인 리뷰인지 확인
+        if review.user_id != user_id:
+            raise ReviewNotOwnedException()
+
+        # 리뷰 업데이트
+        update_dict = update_data.model_dump(exclude_unset=True)
+        updated_review = self.review_repo.update(review, update_dict)
+
+        # 평점이 변경된 경우 책 평점 재계산
+        if "rating" in update_dict:
+            self._update_book_rating(review.book_id)
+
+        # 리뷰 다시 조회 (user 정보 포함)
+        updated_review = self.review_repo.get_by_id(review_id)
+        return self._build_review_response(updated_review)
 
     def delete_review(
         self, user_id: int, review_id: int, is_admin: bool = False

@@ -112,6 +112,23 @@ class UserRepository:
             self.db.refresh(user)
         return user
 
+    def update_status(self, user: User, is_active: bool, *, commit: bool = True) -> User:
+        """Update user active status.
+
+        Args:
+            user: User instance to update.
+            is_active: New active status value.
+            commit: If True, commit the transaction. Default True.
+
+        Returns:
+            User: Updated user instance.
+        """
+        user.is_active = is_active
+        if commit:
+            self.db.commit()
+            self.db.refresh(user)
+        return user
+
     def delete(self, user: User, *, commit: bool = True) -> None:
         """Delete a user.
 

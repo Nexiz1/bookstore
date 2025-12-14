@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from app.api.dependencies import get_current_user, get_review_service
 from app.models.user import User
 from app.schemas.response import SuccessResponse
-from app.schemas.review import ReviewCreate, ReviewListResponse, ReviewResponse
+from app.schemas.review import ReviewCreate, ReviewListResponse, ReviewResponse, ReviewUpdate
 from app.services.review_service import ReviewService
 
 router = APIRouter()
@@ -34,6 +34,18 @@ def get_book_reviews(
     """해당 책의 리뷰 목록 조회"""
     result = service.get_book_reviews(book_id)
     return SuccessResponse(data=result)
+
+
+@router.patch("/reviews/{review_id}", response_model=SuccessResponse[ReviewResponse])
+def update_review(
+    review_id: int,
+    update_data: ReviewUpdate,
+    current_user: User = Depends(get_current_user),
+    service: ReviewService = Depends(get_review_service),
+):
+    """리뷰 수정 (작성자 본인만 가능)"""
+    review = service.update_review(current_user.id, review_id, update_data)
+    return SuccessResponse(data=review, message="Review updated successfully")
 
 
 @router.delete("/reviews/{review_id}", response_model=SuccessResponse)

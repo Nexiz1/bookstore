@@ -12,6 +12,12 @@ class ReviewCreate(BaseModel):
     comment: Optional[str] = Field(None, max_length=1000)
 
 
+class ReviewUpdate(BaseModel):
+    """리뷰 수정 요청"""
+    rating: Optional[int] = Field(None, ge=1, le=5)
+    comment: Optional[str] = Field(None, max_length=1000)
+
+
 # ============ Response Schemas ============
 class ReviewResponse(BaseModel):
     """리뷰 응답"""

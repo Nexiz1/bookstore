@@ -7,8 +7,10 @@ Repositories do NOT commit by default - the service layer manages transactions.
 from datetime import date
 from typing import List, Optional, Tuple
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
+from app.models.order import Order
+from app.models.order_item import OrderItem
 from app.models.settlement import Settlement, SettlementOrder
 
 
@@ -82,3 +84,43 @@ class SettlementRepository:
             self.db.commit()
             self.db.refresh(db_order)
         return db_order
+
+    def get_unsettled_order_items(self) -> List[OrderItem]:
+        """Get order items that are ARRIVED but not yet settled.
+
+        Returns:
+            List[OrderItem]: List of unsettled order items with book info loaded.
+        """
+        # Subquery to get order_item_ids that are already settled
+        settled_item_ids = (
+            self.db.query(SettlementOrder.order_item_id)
+            .subquery()
+        )
+
+        # Get ARRIVED order items that are not in settlement_order
+        return (
+            self.db.query(OrderItem)
+            .join(Order)
+            .options(joinedload(OrderItem.book))
+            .filter(
+                Order.status == "ARRIVED",
+                ~OrderItem.id.in_(settled_item_ids),
+            )
+            .all()
+        )
+
+    def is_order_item_settled(self, order_item_id: int) -> bool:
+        """Check if an order item has already been settled.
+
+        Args:
+            order_item_id: ID of the order item to check.
+
+        Returns:
+            bool: True if already settled, False otherwise.
+        """
+        return (
+            self.db.query(SettlementOrder)
+            .filter(SettlementOrder.order_item_id == order_item_id)
+            .first()
+            is not None
+        )

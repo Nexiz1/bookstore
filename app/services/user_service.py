@@ -67,3 +67,32 @@ class UserService:
 
         updated_user = self.user_repo.update_role(user, role)
         return updated_user
+
+    def deactivate_user(self, admin_id: int, target_user_id: int) -> UserResponse:
+        """사용자 계정 비활성화 (Admin 전용)
+
+        Args:
+            admin_id: 요청한 관리자의 ID
+            target_user_id: 비활성화할 사용자의 ID
+
+        Returns:
+            UserResponse: 비활성화된 사용자 정보
+
+        Raises:
+            ForbiddenException: 자기 자신을 비활성화하려는 경우
+            UserNotFoundException: 대상 사용자가 존재하지 않는 경우
+        """
+        # 자기 자신은 비활성화 불가
+        if target_user_id == admin_id:
+            raise ForbiddenException("Cannot deactivate your own account")
+
+        user = self.user_repo.get_by_id(target_user_id)
+        if not user:
+            raise UserNotFoundException()
+
+        # 다른 관리자 계정도 비활성화 불가
+        if user.role == "admin":
+            raise ForbiddenException("Cannot deactivate admin accounts")
+
+        updated_user = self.user_repo.update_status(user, is_active=False)
+        return updated_user

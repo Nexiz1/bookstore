@@ -6,7 +6,7 @@ This module defines the User SQLAlchemy model with SQLAlchemy 2.0 style.
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import TIMESTAMP, Date, Enum, Integer, String
+from sqlalchemy import Boolean, TIMESTAMP, Date, Enum, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -33,6 +33,7 @@ class User(Base):
         gender: User's gender.
         address: User's address.
         phone_number: Contact phone number.
+        is_active: Account activation status.
         created_at: Record creation timestamp.
         updated_at: Last update timestamp.
     """
@@ -57,6 +58,9 @@ class User(Base):
     gender: Mapped[Optional[str]] = mapped_column(String(10))
     address: Mapped[Optional[str]] = mapped_column(String(255))
     phone_number: Mapped[Optional[str]] = mapped_column("phoneNumber", String(20))
+    is_active: Mapped[bool] = mapped_column(
+        "isActive", Boolean, nullable=False, default=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         "createdAt", TIMESTAMP, server_default=func.now()
     )

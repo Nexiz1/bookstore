@@ -68,6 +68,25 @@ class ReviewRepository:
             self.db.refresh(db_review)
         return db_review
 
+    def update(self, review: Review, update_data: dict, *, commit: bool = True) -> Review:
+        """Update a review.
+
+        Args:
+            review: Review instance to update.
+            update_data: Dictionary of fields to update.
+            commit: If True, commit the transaction. Default True.
+
+        Returns:
+            Review: Updated review instance.
+        """
+        for key, value in update_data.items():
+            if value is not None:
+                setattr(review, key, value)
+        if commit:
+            self.db.commit()
+            self.db.refresh(review)
+        return review
+
     def delete(self, review: Review, *, commit: bool = True) -> None:
         """Delete a review.
 
