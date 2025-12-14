@@ -12,6 +12,8 @@ email-validator
 # MySQL 연결을 위한 라이브러리
 pymysql
 cryptography
+# 데이터베이스 마이그레이션
+alembic
 # 테스트 라이브러리
 pytest
 pytest-asyncio

@@ -370,6 +370,67 @@ pre-commit run --all-files
 - **Python Version**: 3.12
 - **Import 정렬**: Black 프로필 사용
 
+## 🗄️ 데이터베이스 마이그레이션 (Alembic)
+
+프로덕션 환경에서는 Alembic을 사용하여 데이터베이스 스키마를 관리합니다.
+
+### 마이그레이션 명령어
+
+```bash
+# 새 마이그레이션 생성 (자동 감지)
+alembic revision --autogenerate -m "설명"
+
+# 마이그레이션 적용
+alembic upgrade head
+
+# 한 단계 롤백
+alembic downgrade -1
+
+# 마이그레이션 히스토리 확인
+alembic history
+
+# 현재 버전 확인
+alembic current
+```
+
+### 개발 환경 vs 프로덕션
+
+| 환경 | 스키마 관리 방식 |
+|------|-----------------|
+| **개발** | `Base.metadata.create_all()` (main.py) |
+| **프로덕션** | `alembic upgrade head` |
+
+## 🔄 트랜잭션 관리
+
+### Unit of Work 패턴
+
+주문 생성과 같이 여러 DB 작업이 필요한 경우, Unit of Work 패턴으로 트랜잭션 원자성을 보장합니다.
+
+```python
+# app/services/order_service.py
+from app.core.database import UnitOfWork
+
+def create_order(self, user_id: int, order_data: OrderCreate):
+    with UnitOfWork(self.db) as uow:
+        # 1. 주문 생성
+        order = self.order_repo.create(order_data)
+        # 2. 주문 아이템 생성
+        for item in items:
+            self.order_repo.add_item(item)
+        # 3. 재고 업데이트
+        self.book_repo.update_stats(book, ...)
+        # 4. 장바구니 비우기
+        self.cart_repo.delete_multiple(carts)
+
+        uow.commit()  # 모두 성공 시 한 번에 커밋
+```
+
+### Repository 계층
+
+- Repository 메서드는 기본적으로 **커밋하지 않음** (`commit=False`)
+- 단일 작업 시 `commit=True` 전달 가능
+- 복합 트랜잭션은 Service 계층에서 UnitOfWork로 관리
+
 ## 🔧 기술 스택
 
 ### Backend
@@ -395,6 +456,7 @@ pre-commit run --all-files
 |-----------|------|
 | **PyMySQL** | MySQL 드라이버 |
 | **MySQL 8.0** | DBMS |
+| **Alembic** | 데이터베이스 마이그레이션 |
 
 ### 테스트
 | 라이브러리 | 용도 |

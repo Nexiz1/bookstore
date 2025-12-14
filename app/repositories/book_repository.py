@@ -1,4 +1,8 @@
-"""Book repository module for database operations."""
+"""Book repository module for database operations.
+
+This module handles all database CRUD operations and queries for books.
+Repositories do NOT commit by default - the service layer manages transactions.
+"""
 
 from typing import List, Optional, Tuple
 
@@ -12,7 +16,10 @@ from app.schemas.book import BookSortBy
 class BookRepository:
     """Repository for book-related database operations.
 
-    This class handles all database CRUD operations and queries for books.
+    Note:
+        By default, methods do NOT commit changes. Pass commit=True
+        for single-operation transactions, or let the service layer
+        manage commits for multi-operation transactions.
 
     Attributes:
         db: SQLAlchemy database session.
@@ -75,38 +82,82 @@ class BookRepository:
         books = query.offset(skip).limit(limit).all()
         return books, total
 
-    def create(self, book_data: dict) -> Book:
+    def create(self, book_data: dict, *, commit: bool = False) -> Book:
+        """Create a new book.
+
+        Args:
+            book_data: Dictionary containing book fields.
+            commit: If True, commit the transaction. Default False.
+
+        Returns:
+            Book: Created book instance.
+        """
         db_book = Book(**book_data)
         self.db.add(db_book)
-        self.db.commit()
-        self.db.refresh(db_book)
+        self.db.flush()
+        if commit:
+            self.db.commit()
+            self.db.refresh(db_book)
         return db_book
 
-    def update(self, book: Book, update_data: dict) -> Book:
+    def update(self, book: Book, update_data: dict, *, commit: bool = False) -> Book:
+        """Update book information.
+
+        Args:
+            book: Book instance to update.
+            update_data: Dictionary of fields to update.
+            commit: If True, commit the transaction. Default False.
+
+        Returns:
+            Book: Updated book instance.
+        """
         for key, value in update_data.items():
             if value is not None:
                 setattr(book, key, value)
-        self.db.commit()
-        self.db.refresh(book)
+        if commit:
+            self.db.commit()
+            self.db.refresh(book)
         return book
 
     def update_stats(
         self,
         book: Book,
-        rating: float = None,
-        review_count: int = None,
-        purchase_count: int = None,
+        rating: Optional[float] = None,
+        review_count: Optional[int] = None,
+        purchase_count: Optional[int] = None,
+        *,
+        commit: bool = False,
     ) -> Book:
+        """Update book statistics (rating, review count, purchase count).
+
+        Args:
+            book: Book instance to update.
+            rating: New average rating value.
+            review_count: New review count value.
+            purchase_count: New purchase count value.
+            commit: If True, commit the transaction. Default False.
+
+        Returns:
+            Book: Updated book instance.
+        """
         if rating is not None:
             book.average_rating = rating
         if review_count is not None:
             book.review_count = review_count
         if purchase_count is not None:
             book.purchase_count = purchase_count
-        self.db.commit()
-        self.db.refresh(book)
+        if commit:
+            self.db.commit()
+            self.db.refresh(book)
         return book
 
-    def delete(self, book: Book) -> None:
+    def delete(self, book: Book, *, commit: bool = False) -> None:
+        """Soft delete a book by setting status to SOLDOUT.
+
+        Args:
+            book: Book instance to delete.
+            commit: If True, commit the transaction. Default False.
+        """
         book.status = "SOLDOUT"
-        self.db.commit()
+        if commit:
+            self.db.commit()

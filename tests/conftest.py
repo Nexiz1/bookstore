@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -11,6 +12,20 @@ from app.main import app
 # 테스트용 인메모리 SQLite 데이터베이스
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    """SQLite Foreign Key 제약 조건 활성화.
+
+    SQLite는 기본적으로 Foreign Key 제약을 비활성화하고 있어,
+    테스트 환경에서 데이터 무결성 검증이 제대로 이루어지지 않을 수 있습니다.
+    이 이벤트 리스너를 통해 Foreign Key 제약을 강제로 활성화합니다.
+    """
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False},
@@ -18,33 +33,64 @@ engine = create_engine(
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-
-def override_get_db():
-    """테스트용 DB 세션"""
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
+# 테이블은 한 번만 생성
+Base.metadata.create_all(bind=engine)
 
 
 @pytest.fixture(scope="function")
 def db_session():
-    """각 테스트마다 새로운 DB 세션 제공"""
-    # 테이블 생성은 한 번만 수행
-    Base.metadata.create_all(bind=engine)
+    """각 테스트마다 새로운 DB 세션 제공.
+
+    이 fixture는 테스트 함수에서 직접 DB 조작이 필요할 때 사용됩니다.
+    StaticPool을 사용하여 동일한 in-memory DB를 공유하지만,
+    세션은 독립적으로 관리됩니다.
+    """
     db = TestingSessionLocal()
     try:
         yield db
     finally:
+        db.rollback()  # 혹시 모를 미완료 트랜잭션 롤백
         db.close()
-        # 테이블 삭제도 한 번만 수행
-        Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture(scope="function", autouse=True)
+def cleanup_db(request):
+    """각 테스트 후 DB 데이터를 정리합니다.
+
+    autouse=True로 설정하여 모든 테스트에 자동 적용됩니다.
+    테스트 전에는 실행하지 않고, 테스트 후에만 실행합니다.
+    """
+    yield
+    # 테스트 후에만 실행 - fixture setup 중에는 실행되지 않음
+    if request.node.name:  # 실제 테스트 함수인 경우에만
+        db = TestingSessionLocal()
+        try:
+            # Foreign key 제약을 고려하여 역순으로 삭제
+            for table in reversed(Base.metadata.sorted_tables):
+                db.execute(table.delete())
+            db.commit()
+        except Exception:
+            db.rollback()
+        finally:
+            db.close()
 
 
 @pytest.fixture(scope="function")
-def client(db_session):
-    """테스트 클라이언트"""
+def client():
+    """테스트 클라이언트.
+
+    각 API 요청마다 새로운 세션을 생성하여 트랜잭션 격리를 보장합니다.
+    StaticPool을 사용하므로 동일한 in-memory DB를 공유하지만,
+    세션은 독립적으로 관리되어 테스트 간 격리를 보장합니다.
+    """
+    def override_get_db():
+        """테스트용 DB 세션 (매 요청마다 새로운 세션 생성)"""
+        db = TestingSessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+
     app.dependency_overrides[get_db] = override_get_db
 
     with TestClient(app) as test_client:

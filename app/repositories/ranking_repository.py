@@ -1,3 +1,9 @@
+"""Ranking repository module for database operations.
+
+This module handles all database CRUD operations for rankings.
+Repositories do NOT commit by default - the service layer manages transactions.
+"""
+
 from typing import List, Optional
 
 from sqlalchemy.orm import Session, joinedload
@@ -6,6 +12,14 @@ from app.models.ranking import Ranking
 
 
 class RankingRepository:
+    """Repository for ranking-related database operations.
+
+    Note:
+        By default, methods do NOT commit changes. Pass commit=True
+        for single-operation transactions, or let the service layer
+        manage commits for multi-operation transactions.
+    """
+
     def __init__(self, db: Session):
         self.db = db
 
@@ -34,21 +48,49 @@ class RankingRepository:
 
         return query.order_by(Ranking.rank.asc()).limit(limit).all()
 
-    def create(self, ranking_data: dict) -> Ranking:
+    def create(self, ranking_data: dict, *, commit: bool = True) -> Ranking:
+        """Create a new ranking.
+
+        Args:
+            ranking_data: Dictionary containing ranking fields.
+            commit: If True, commit the transaction. Default True.
+
+        Returns:
+            Ranking: Created ranking instance.
+        """
         db_ranking = Ranking(**ranking_data)
         self.db.add(db_ranking)
-        self.db.commit()
-        self.db.refresh(db_ranking)
+        self.db.flush()
+        if commit:
+            self.db.commit()
+            self.db.refresh(db_ranking)
         return db_ranking
 
-    def update(self, ranking: Ranking, update_data: dict) -> Ranking:
+    def update(self, ranking: Ranking, update_data: dict, *, commit: bool = True) -> Ranking:
+        """Update ranking information.
+
+        Args:
+            ranking: Ranking instance to update.
+            update_data: Dictionary of fields to update.
+            commit: If True, commit the transaction. Default True.
+
+        Returns:
+            Ranking: Updated ranking instance.
+        """
         for key, value in update_data.items():
             if value is not None:
                 setattr(ranking, key, value)
-        self.db.commit()
-        self.db.refresh(ranking)
+        if commit:
+            self.db.commit()
+            self.db.refresh(ranking)
         return ranking
 
-    def delete_all(self) -> None:
+    def delete_all(self, *, commit: bool = True) -> None:
+        """Delete all rankings.
+
+        Args:
+            commit: If True, commit the transaction. Default True.
+        """
         self.db.query(Ranking).delete()
-        self.db.commit()
+        if commit:
+            self.db.commit()

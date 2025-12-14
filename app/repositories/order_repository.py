@@ -1,3 +1,9 @@
+"""Order repository module for database operations.
+
+This module handles all database CRUD operations for orders and order items.
+Repositories do NOT commit by default - the service layer manages transactions.
+"""
+
 from typing import List, Optional, Tuple
 
 from sqlalchemy.orm import Session, joinedload
@@ -7,6 +13,14 @@ from app.models.order_item import OrderItem
 
 
 class OrderRepository:
+    """Repository for order-related database operations.
+
+    Note:
+        By default, methods do NOT commit changes. Pass commit=True
+        for single-operation transactions, or let the service layer
+        manage commits for multi-operation transactions.
+    """
+
     def __init__(self, db: Session):
         self.db = db
 
@@ -48,24 +62,57 @@ class OrderRepository:
         )
         return orders, total
 
-    def create(self, order_data: dict) -> Order:
+    def create(self, order_data: dict, *, commit: bool = False) -> Order:
+        """Create a new order.
+
+        Args:
+            order_data: Dictionary containing order fields.
+            commit: If True, commit the transaction. Default False.
+
+        Returns:
+            Order: Created order instance.
+        """
         db_order = Order(**order_data)
         self.db.add(db_order)
-        self.db.commit()
-        self.db.refresh(db_order)
+        self.db.flush()  # Get the generated ID
+        if commit:
+            self.db.commit()
+            self.db.refresh(db_order)
         return db_order
 
-    def add_item(self, item_data: dict) -> OrderItem:
+    def add_item(self, item_data: dict, *, commit: bool = False) -> OrderItem:
+        """Add an item to an order.
+
+        Args:
+            item_data: Dictionary containing order item fields.
+            commit: If True, commit the transaction. Default False.
+
+        Returns:
+            OrderItem: Created order item instance.
+        """
         db_item = OrderItem(**item_data)
         self.db.add(db_item)
-        self.db.commit()
-        self.db.refresh(db_item)
+        self.db.flush()  # Get the generated ID
+        if commit:
+            self.db.commit()
+            self.db.refresh(db_item)
         return db_item
 
-    def update_status(self, order: Order, status: str) -> Order:
+    def update_status(self, order: Order, status: str, *, commit: bool = False) -> Order:
+        """Update order status.
+
+        Args:
+            order: Order instance to update.
+            status: New status value.
+            commit: If True, commit the transaction. Default False.
+
+        Returns:
+            Order: Updated order instance.
+        """
         order.status = status
-        self.db.commit()
-        self.db.refresh(order)
+        if commit:
+            self.db.commit()
+            self.db.refresh(order)
         return order
 
 

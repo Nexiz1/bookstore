@@ -1,3 +1,9 @@
+"""Review repository module for database operations.
+
+This module handles all database CRUD operations for reviews.
+Repositories do NOT commit by default - the service layer manages transactions.
+"""
+
 from typing import List, Optional, Tuple
 
 from sqlalchemy import func
@@ -7,6 +13,14 @@ from app.models.review import Review
 
 
 class ReviewRepository:
+    """Repository for review-related database operations.
+
+    Note:
+        By default, methods do NOT commit changes. Pass commit=True
+        for single-operation transactions, or let the service layer
+        manage commits for multi-operation transactions.
+    """
+
     def __init__(self, db: Session):
         self.db = db
 
@@ -36,16 +50,34 @@ class ReviewRepository:
         )
         return reviews, total, float(avg_rating)
 
-    def create(self, review_data: dict) -> Review:
+    def create(self, review_data: dict, *, commit: bool = True) -> Review:
+        """Create a new review.
+
+        Args:
+            review_data: Dictionary containing review fields.
+            commit: If True, commit the transaction. Default True.
+
+        Returns:
+            Review: Created review instance.
+        """
         db_review = Review(**review_data)
         self.db.add(db_review)
-        self.db.commit()
-        self.db.refresh(db_review)
+        self.db.flush()
+        if commit:
+            self.db.commit()
+            self.db.refresh(db_review)
         return db_review
 
-    def delete(self, review: Review) -> None:
+    def delete(self, review: Review, *, commit: bool = True) -> None:
+        """Delete a review.
+
+        Args:
+            review: Review instance to delete.
+            commit: If True, commit the transaction. Default True.
+        """
         self.db.delete(review)
-        self.db.commit()
+        if commit:
+            self.db.commit()
 
     def get_average_rating(self, book_id: int) -> Tuple[float, int]:
         avg = (

@@ -61,7 +61,7 @@ class CartService:
             "book_id": cart_data.book_id,
             "quantity": cart_data.quantity,
         }
-        cart = self.cart_repo.create(cart_dict)
+        cart = self.cart_repo.create(cart_dict, commit=True)
 
         # 책 정보 로드를 위해 다시 조회
         cart = self.cart_repo.get_by_id(cart.id)
@@ -84,7 +84,7 @@ class CartService:
         if not cart or cart.user_id != user_id:
             raise CartItemNotFoundException()
 
-        cart = self.cart_repo.update_quantity(cart, update_data.quantity)
+        cart = self.cart_repo.update_quantity(cart, update_data.quantity, commit=True)
         subtotal = cart.book.price * cart.quantity
 
         return CartItemResponse(
@@ -102,5 +102,5 @@ class CartService:
         if not cart or cart.user_id != user_id:
             raise CartItemNotFoundException()
 
-        self.cart_repo.delete(cart)
+        self.cart_repo.delete(cart, commit=True)
         return True

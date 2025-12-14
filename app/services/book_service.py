@@ -41,7 +41,7 @@ class BookService:
         book_dict = book_data.model_dump()
         book_dict["seller_id"] = seller.id
 
-        book = self.book_repo.create(book_dict)
+        book = self.book_repo.create(book_dict, commit=True)
         return book
 
     def get_books(
