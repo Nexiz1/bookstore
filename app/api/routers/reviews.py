@@ -36,6 +36,22 @@ def get_book_reviews(
     return SuccessResponse(data=result)
 
 
+@router.patch(
+    "/books/{book_id}/reviews/{review_id}",
+    response_model=SuccessResponse[ReviewResponse],
+)
+def update_review_by_book(
+    book_id: int,
+    review_id: int,
+    update_data: ReviewUpdate,
+    current_user: User = Depends(get_current_user),
+    service: ReviewService = Depends(get_review_service),
+):
+    """리뷰 수정 (작성자 본인만 가능) - 책 ID 포함 경로"""
+    review = service.update_review(current_user.id, review_id, update_data)
+    return SuccessResponse(data=review, message="Review updated successfully")
+
+
 @router.patch("/reviews/{review_id}", response_model=SuccessResponse[ReviewResponse])
 def update_review(
     review_id: int,
@@ -43,7 +59,7 @@ def update_review(
     current_user: User = Depends(get_current_user),
     service: ReviewService = Depends(get_review_service),
 ):
-    """리뷰 수정 (작성자 본인만 가능)"""
+    """리뷰 수정 (작성자 본인만 가능) - 레거시 경로"""
     review = service.update_review(current_user.id, review_id, update_data)
     return SuccessResponse(data=review, message="Review updated successfully")
 

@@ -2,8 +2,10 @@
 Rankings API 테스트
 - GET /rankings: 도서 랭킹 조회 (Redis 캐시 + DB 폴백)
 """
+import asyncio
 import pytest
 from tests.conftest import assert_success_response, assert_error_response
+from app.services.ranking_service import RankingService
 
 
 class TestGetRankings:
@@ -17,12 +19,15 @@ class TestGetRankings:
         assert data["data"]["rankings"] == []
         assert data["data"]["ranking_type"] == "purchaseCount"
 
-    def test_get_rankings_purchase_count(self, client, buyer_headers, created_book):
+    def test_get_rankings_purchase_count(self, client, buyer_headers, created_book, db_session):
         """판매량 순 랭킹 조회"""
         # 구매 생성
         cart_data = {"book_id": created_book["id"], "quantity": 3}
         client.post("/carts/", json=cart_data, headers=buyer_headers)
         client.post("/orders/", json={}, headers=buyer_headers)
+
+        # 랭킹 데이터 집계 (스케줄러 대신 수동 실행)
+        asyncio.run(RankingService.calculate_and_cache_rankings(db_session))
 
         # 판매량 순 랭킹 조회
         response = client.get("/rankings/?type=purchaseCount")
@@ -37,7 +42,7 @@ class TestGetRankings:
         assert first_item["book_id"] == created_book["id"]
         assert first_item["purchase_count"] == 3
 
-    def test_get_rankings_average_rating(self, client, buyer_headers, completed_order):
+    def test_get_rankings_average_rating(self, client, buyer_headers, completed_order, db_session):
         """평점 순 랭킹 조회"""
         book_id = completed_order["book"]["id"]
         order_item_id = completed_order["order_item_id"]
@@ -49,6 +54,9 @@ class TestGetRankings:
             "comment": "최고의 책입니다!"
         }
         client.post(f"/books/{book_id}/reviews", json=review_data, headers=buyer_headers)
+
+        # 랭킹 데이터 집계 (스케줄러 대신 수동 실행)
+        asyncio.run(RankingService.calculate_and_cache_rankings(db_session))
 
         # 평점 순 랭킹 조회
         response = client.get("/rankings/?type=averageRating")
@@ -98,7 +106,7 @@ class TestRankingsCache:
 
         assert_success_response(response, status_code=200)
 
-    def test_rankings_cache_fallback_to_db(self, client, buyer_headers, created_book, mock_redis):
+    def test_rankings_cache_fallback_to_db(self, client, buyer_headers, created_book, mock_redis, db_session):
         """캐시 미스 시 DB에서 조회 후 캐싱"""
         # 초기 상태: 캐시 비어있음
         mock_redis.clear()
@@ -107,6 +115,12 @@ class TestRankingsCache:
         cart_data = {"book_id": created_book["id"], "quantity": 2}
         client.post("/carts/", json=cart_data, headers=buyer_headers)
         client.post("/orders/", json={}, headers=buyer_headers)
+
+        # 랭킹 데이터 집계 (스케줄러 대신 수동 실행)
+        asyncio.run(RankingService.calculate_and_cache_rankings(db_session))
+
+        # 캐시를 비워서 DB 폴백 테스트
+        mock_redis.clear()
 
         # 랭킹 조회 (DB 폴백 후 캐싱)
         response = client.get("/rankings/?type=purchaseCount")

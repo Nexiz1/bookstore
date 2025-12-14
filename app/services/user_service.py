@@ -88,7 +88,7 @@ class UserService:
 
         user = self.user_repo.get_by_id(target_user_id)
         if not user:
-            raise UserNotFoundException()
+            raise UserNotFoundException(user_id=target_user_id)
 
         # 다른 관리자 계정도 비활성화 불가
         if user.role == "admin":

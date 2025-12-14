@@ -109,6 +109,8 @@ class SettlementService:
                 self.settlement_repo.add_order(
                     settlement.id, item.id, commit=False
                 )
+                # 정산 처리 완료 표시
+                item.is_settled = True
                 total_orders += 1
 
             created_count += 1

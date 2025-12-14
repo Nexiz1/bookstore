@@ -363,6 +363,24 @@ def arrived_order(client, buyer_headers, created_book, db_session):
     }
 
 
+@pytest.fixture
+def completed_order(client, buyer_headers, created_book):
+    """완료된 주문 (리뷰 작성 가능 상태)"""
+    # 장바구니 담기
+    cart_data = {"book_id": created_book["id"], "quantity": 1}
+    client.post("/carts/", json=cart_data, headers=buyer_headers)
+
+    # 주문 생성
+    order_response = client.post("/orders/", json={}, headers=buyer_headers)
+    order = order_response.json()["data"]
+
+    return {
+        "order": order,
+        "order_item_id": order["items"][0]["id"],
+        "book": created_book
+    }
+
+
 # ============ Test Helper Functions ============
 
 def assert_success_response(response, status_code=200, has_data=True):
