@@ -5,6 +5,7 @@ Users API 테스트
 - POST /users/me/password: 비밀번호 변경
 - GET /users: 전체 회원 목록 (Admin)
 - PATCH /users/{user_id}/role: 권한 변경 (Admin)
+- PATCH /users/{user_id}/deactivate: 사용자 계정 비활성화 (Admin)
 """
 import pytest
 
@@ -133,3 +134,107 @@ class TestAdminUserManagement:
 
         assert response.status_code == 200
         assert response.json()["data"]["role"] == "seller"
+
+
+class TestUserDeactivation:
+    """사용자 계정 비활성화 테스트"""
+
+    def test_deactivate_user_success(self, client, admin_headers, test_user_data, db_session):
+        """Admin이 사용자 계정 비활성화 성공"""
+        from app.models.user import User
+
+        # 대상 사용자 생성
+        signup_response = client.post("/auth/signup", json=test_user_data)
+        target_user_id = signup_response.json()["data"]["id"]
+
+        # 비활성화 전 상태 확인
+        user_before = db_session.query(User).filter(User.id == target_user_id).first()
+        assert user_before.is_active is True
+
+        # 계정 비활성화
+        response = client.patch(
+            f"/users/{target_user_id}/deactivate",
+            headers=admin_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
+        assert data["data"]["is_active"] is False
+        assert data["message"] == "User account deactivated successfully"
+
+        # DB에서 is_active 값 검증
+        db_session.expire_all()  # 캐시 무효화
+        user_after = db_session.query(User).filter(User.id == target_user_id).first()
+        assert user_after.is_active is False
+
+    def test_deactivate_user_not_admin(self, client, auth_headers, test_user2_data):
+        """일반 사용자가 비활성화 시도 (403 Forbidden)"""
+        # 다른 사용자 생성
+        signup_response = client.post("/auth/signup", json=test_user2_data)
+        target_user_id = signup_response.json()["data"]["id"]
+
+        # 일반 사용자로 비활성화 시도
+        response = client.patch(
+            f"/users/{target_user_id}/deactivate",
+            headers=auth_headers
+        )
+
+        assert response.status_code == 403
+
+    def test_deactivate_admin_forbidden(self, client, admin_headers, db_session):
+        """Admin 계정 비활성화 시도 (403 Forbidden)"""
+        from app.models.user import User
+
+        # Admin 사용자 ID 조회
+        admin_user = db_session.query(User).filter(User.role == "admin").first()
+
+        # Admin 자신 비활성화 시도
+        response = client.patch(
+            f"/users/{admin_user.id}/deactivate",
+            headers=admin_headers
+        )
+
+        assert response.status_code == 403
+
+    def test_deactivate_user_not_found(self, client, admin_headers):
+        """존재하지 않는 사용자 비활성화 시도 (404 Not Found)"""
+        response = client.patch(
+            "/users/99999/deactivate",
+            headers=admin_headers
+        )
+
+        assert response.status_code == 404
+
+    def test_deactivated_user_login_blocked(self, client, deactivated_user):
+        """비활성화된 계정으로 로그인 시도 (401 Unauthorized)"""
+        login_data = {
+            "email": deactivated_user["email"],
+            "password": deactivated_user["password"]
+        }
+        response = client.post("/auth/login", json=login_data)
+
+        assert response.status_code == 401
+
+    def test_deactivated_user_api_access_blocked(self, client, test_user_data, admin_headers, db_session):
+        """비활성화된 계정의 토큰으로 API 접근 시도 (401 Unauthorized)"""
+        # 사용자 생성 및 로그인
+        client.post("/auth/signup", json=test_user_data)
+        login_response = client.post("/auth/login", json={
+            "email": test_user_data["email"],
+            "password": test_user_data["password"]
+        })
+        token = login_response.json()["data"]["access_token"]
+        user_headers = {"Authorization": f"Bearer {token}"}
+
+        # 정상 접근 확인
+        me_response = client.get("/users/me", headers=user_headers)
+        assert me_response.status_code == 200
+        user_id = me_response.json()["data"]["id"]
+
+        # Admin이 계정 비활성화
+        client.patch(f"/users/{user_id}/deactivate", headers=admin_headers)
+
+        # 비활성화된 토큰으로 API 접근 시도
+        blocked_response = client.get("/users/me", headers=user_headers)
+        assert blocked_response.status_code == 401
