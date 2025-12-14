@@ -1,88 +1,64 @@
-# 📚 BookStore API
+# BookStore API
 
-온라인 서점 백엔드 API - FastAPI + MySQL + Docker Compose
+온라인 서점 백엔드 API - FastAPI + MySQL + Redis + Docker Compose
 
-## 📋 프로젝트 개요
+---
 
+## 프로젝트 개요
+
+### 문제 정의
+온라인 서점 플랫폼의 백엔드 API 서버로, 도서 판매/구매, 리뷰, 랭킹, 정산 등의 핵심 기능을 제공합니다.
+
+### 기본 정보
 | 항목 | 내용 |
 |------|------|
 | **학번** | 202111666 |
 | **작성자** | 최진서 |
-| **DBMS** | MySQL 8.0 (MariaDB 호환) |
+| **DBMS** | MySQL 8.0 |
+| **Cache** | Redis (랭킹 캐싱) |
 | **DB Name** | bookStoreDb |
-| **API 개수** | 36개 엔드포인트 |
+| **API 개수** | 40개 엔드포인트 |
 | **Python** | 3.12 |
 | **Framework** | FastAPI |
 
-## 🏗️ 아키텍처
+### 주요 기능 목록
+- **인증/회원**: 회원가입, JWT 로그인, 토큰 재발급, 프로필 관리
+- **판매자**: 판매자 등록 신청, 판매자 정보 관리
+- **도서**: 도서 CRUD, 검색/필터/정렬
+- **장바구니**: 장바구니 CRUD
+- **주문**: 주문 생성, 조회, 취소
+- **리뷰**: 리뷰 작성/수정/삭제, 평점 관리
+- **찜하기**: 찜 등록/취소
+- **랭킹**: Redis 캐싱 기반 실시간 랭킹 (10분 주기 갱신)
+- **세일**: 타임 세일 생성/관리
+- **정산**: 판매자 정산 데이터 생성/조회
+- **관리자**: 사용자 관리, 권한 변경, 계정 비활성화
 
-```
-app/
-├── api/                    # Presentation Layer
-│   ├── routers/           # 12개 API 라우터
-│   │   ├── auth.py        # 인증 (4 endpoints)
-│   │   ├── users.py       # 회원 (5 endpoints)
-│   │   ├── sellers.py     # 판매자 (3 endpoints)
-│   │   ├── books.py       # 도서 (5 endpoints)
-│   │   ├── carts.py       # 장바구니 (4 endpoints)
-│   │   ├── orders.py      # 주문 (4 endpoints)
-│   │   ├── reviews.py     # 리뷰 (3 endpoints)
-│   │   ├── favorites.py   # 찜하기 (3 endpoints)
-│   │   ├── rankings.py    # 랭킹 (1 endpoint)
-│   │   ├── sales.py       # 세일 (2 endpoints)
-│   │   ├── settlements.py # 정산 (1 endpoint)
-│   │   └── admin.py       # 관리자 (1 endpoint)
-│   └── dependencies.py    # 의존성 주입 & JWT 인증
-├── services/              # Business Logic Layer (12개)
-├── repositories/          # Data Access Layer (11개)
-├── models/                # SQLAlchemy ORM Models (13개 테이블)
-├── schemas/               # Pydantic DTOs (Request/Response)
-├── core/
-│   ├── config.py          # 환경 설정
-│   ├── database.py        # DB 연결
-│   └── security.py        # JWT & 비밀번호 해싱
-├── exceptions/            # 커스텀 예외 & 핸들러 (10개 도메인별 예외)
-├── middleware/            # 로깅 미들웨어
-├── utils/                 # 유틸리티 (로깅 설정)
-└── main.py                # Application Entry Point
+---
 
-tests/                     # 테스트 코드
-├── conftest.py            # pytest fixtures
-├── test_auth.py           # 인증 테스트
-├── test_users.py          # 사용자 테스트
-├── test_sellers.py        # 판매자 테스트
-├── test_books.py          # 도서 테스트
-├── test_carts.py          # 장바구니 테스트
-├── test_orders.py         # 주문 테스트
-├── test_reviews.py        # 리뷰 테스트
-└── test_favorites.py      # 찜하기 테스트
-```
-
-## 🚀 빠른 시작
+## 실행 방법
 
 ### Docker Compose (권장)
 
 ```bash
 # 1. 환경변수 설정
 cp .env.example .env
+# .env 파일 수정 (아래 환경변수 설명 참조)
 
 # 2. 컨테이너 빌드 및 실행
 docker-compose up --build
 
-# 3. API 문서 확인
+# 3. 시드 데이터 생성 (선택)
+docker-compose exec app python scripts/seed.py
+
+# 4. API 문서 확인
 # http://localhost:8000/docs
 ```
 
-### VS Code DevContainer
-
-1. VS Code에서 프로젝트 열기
-2. `F1` → `Dev Containers: Reopen in Container` 선택
-3. 자동으로 MySQL + FastAPI 환경 구성
-
-### 로컬 개발 환경
+### 로컬 실행
 
 ```bash
-# 1. 가상환경 생성
+# 1. 가상환경 생성 및 활성화
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
@@ -91,13 +67,153 @@ pip install -r requirements.txt
 
 # 3. 환경변수 설정
 cp .env.example .env
-# .env 파일에서 DATABASE_URL 수정
+# DATABASE_URL, REDIS_URL 수정
 
-# 4. 서버 실행
-uvicorn app.main:app --reload
+# 4. 데이터베이스 마이그레이션 (Alembic 사용 시)
+alembic upgrade head
+
+# 5. 시드 데이터 생성 (선택)
+python scripts/seed.py
+
+# 6. 서버 실행
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-## 📡 API 엔드포인트 (Total: 36)
+### VS Code DevContainer
+
+1. VS Code에서 프로젝트 열기
+2. `F1` → `Dev Containers: Reopen in Container` 선택
+3. 자동으로 MySQL + Redis + FastAPI 환경 구성
+
+---
+
+## 환경변수 설명
+
+`.env.example` 파일 참조:
+
+| 변수명 | 설명 | 기본값 |
+|--------|------|--------|
+| `APP_NAME` | 애플리케이션 이름 | `"BookStore API"` |
+| `APP_VERSION` | 애플리케이션 버전 | `"1.0.0"` |
+| `DEBUG` | 디버그 모드 | `True` |
+| `DATABASE_URL` | MySQL 연결 문자열 | `mysql+pymysql://user:pass@db:3306/bookStoreDb` |
+| `REDIS_URL` | Redis 연결 문자열 | `redis://redis:6379/0` |
+| `SECRET_KEY` | JWT 서명 비밀키 (프로덕션에서 변경 필수) | `your-secret-key...` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access Token 만료 시간 (분) | `30` |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh Token 만료 시간 (일) | `7` |
+| `LOG_LEVEL` | 로깅 레벨 | `DEBUG` |
+| `CORS_ORIGINS` | 허용할 CORS Origin 목록 | `["http://localhost:3000"]` |
+
+---
+
+## 배포 주소
+
+| 항목 | URL |
+|------|-----|
+| **Base URL** | `http://localhost:8000` |
+| **Swagger UI** | `http://localhost:8000/docs` |
+| **ReDoc** | `http://localhost:8000/redoc` |
+| **Health Check** | `http://localhost:8000/health` |
+
+---
+
+## 인증 플로우 설명
+
+### JWT 토큰 기반 인증
+
+```
+1. 회원가입 (POST /auth/signup)
+   └─> 사용자 계정 생성
+
+2. 로그인 (POST /auth/login)
+   └─> access_token + refresh_token 발급
+
+3. API 요청 시 헤더에 토큰 포함
+   Authorization: Bearer <access_token>
+
+4. 토큰 만료 시 재발급 (POST /auth/refresh)
+   └─> 새로운 access_token 발급
+
+5. 로그아웃 (POST /auth/logout)
+   └─> 클라이언트에서 토큰 삭제
+```
+
+### 토큰 구조
+- **Access Token**: 30분 유효 (API 인증용)
+- **Refresh Token**: 7일 유효 (Access Token 재발급용)
+- **알고리즘**: HS256
+- **비밀번호 해싱**: Argon2id (OWASP 권장)
+
+---
+
+## 역할/권한표
+
+| 권한 | 설명 | 접근 가능 API |
+|------|------|--------------|
+| `user` | 일반 사용자 (기본) | 도서 조회, 장바구니, 주문, 리뷰, 찜하기 |
+| `seller` | 판매자 | user 권한 + 도서 등록/관리, 세일 생성, 정산 조회 |
+| `admin` | 관리자 | 전체 권한 + 사용자 관리, 권한 변경, 계정 비활성화, 정산 생성 |
+
+### 역할별 API 접근 권한
+
+| API | Anyone | User | Seller | Admin |
+|-----|--------|------|--------|-------|
+| 회원가입/로그인 | O | O | O | O |
+| 도서 목록/상세 조회 | O | O | O | O |
+| 랭킹 조회 | O | O | O | O |
+| 프로필 조회/수정 | - | O | O | O |
+| 장바구니 CRUD | - | O | - | O |
+| 주문 생성/조회/취소 | - | O | - | O |
+| 리뷰 작성/수정/삭제 | - | O | O | O |
+| 찜하기 등록/취소 | - | O | O | O |
+| 도서 등록/수정/삭제 | - | - | O | O |
+| 세일 생성 | - | - | O | O |
+| 정산 조회 | - | - | O | O |
+| 전체 사용자 조회 | - | - | - | O |
+| 사용자 권한 변경 | - | - | - | O |
+| 사용자 계정 비활성화 | - | - | - | O |
+| 정산 데이터 생성 | - | - | - | O |
+| 전체 주문 현황 조회 | - | - | - | O |
+
+---
+
+## 예제 계정
+
+시드 데이터 실행 후 사용 가능:
+
+| 역할 | 이메일 | 비밀번호 | 비고 |
+|------|--------|----------|------|
+| **Admin** | `admin@bookstore.com` | `admin123!` | 전체 관리 권한 |
+| **User** | `user1@xxx.com` ~ `user49@xxx.com` | `password123!` | 일반 사용자 |
+
+> **주의**: Admin 계정은 모든 데이터에 접근 가능합니다. 프로덕션에서는 비밀번호를 반드시 변경하세요.
+
+---
+
+## DB 연결 정보 (테스트용)
+
+Docker Compose 환경:
+
+| 항목 | 값 |
+|------|-----|
+| **Host** | `localhost` (외부) / `db` (Docker 내부) |
+| **Port** | `3306` |
+| **Database** | `bookStoreDb` |
+| **Username** | `bookstore_user` |
+| **Password** | `.env` 파일 참조 |
+| **권한** | bookStoreDb 데이터베이스 전체 권한 |
+
+Redis:
+
+| 항목 | 값 |
+|------|-----|
+| **Host** | `localhost` (외부) / `redis` (Docker 내부) |
+| **Port** | `6379` |
+| **Database** | `0` |
+
+---
+
+## 엔드포인트 요약표 (Total: 40)
 
 ### 1. 인증 (Auth) - 4개
 | Method | URL | 설명 | 권한 |
@@ -107,7 +223,7 @@ uvicorn app.main:app --reload
 | POST | `/auth/refresh` | 토큰 재발급 | Anyone |
 | POST | `/auth/logout` | 로그아웃 | User/Seller/Admin |
 
-### 2. 회원 (Users) - 5개
+### 2. 회원 (Users) - 6개
 | Method | URL | 설명 | 권한 |
 |--------|-----|------|------|
 | GET | `/users/me` | 내 프로필 조회 | User/Seller/Admin |
@@ -115,6 +231,7 @@ uvicorn app.main:app --reload
 | POST | `/users/me/password` | 비밀번호 변경 | User/Seller/Admin |
 | GET | `/users` | 전체 회원 목록 | Admin |
 | PATCH | `/users/{user_id}/role` | 회원 권한 변경 | Admin |
+| PATCH | `/users/{user_id}/deactivate` | 계정 비활성화 | Admin |
 
 ### 3. 판매자 (Sellers) - 3개
 | Method | URL | 설명 | 권한 |
@@ -140,20 +257,21 @@ uvicorn app.main:app --reload
 | PATCH | `/carts/{cart_id}` | 수량 변경 | User |
 | DELETE | `/carts/{cart_id}` | 장바구니 아이템 삭제 | User |
 
-### 6. 주문 (Orders) - 4개 + Admin 1개
+### 6. 주문 (Orders) - 4개
 | Method | URL | 설명 | 권한 |
 |--------|-----|------|------|
 | POST | `/orders` | 주문 생성 | User |
 | GET | `/orders` | 내 주문 내역 조회 | User |
 | GET | `/orders/{order_id}` | 주문 상세 조회 | User |
 | POST | `/orders/{order_id}/cancel` | 주문 취소 | User |
-| GET | `/admin/orders` | 전체 주문 현황 | Admin |
 
-### 7. 리뷰 (Reviews) - 3개
+### 7. 리뷰 (Reviews) - 5개
 | Method | URL | 설명 | 권한 |
 |--------|-----|------|------|
 | POST | `/books/{book_id}/reviews` | 리뷰 작성 | User (구매자) |
 | GET | `/books/{book_id}/reviews` | 리뷰 목록 조회 | Anyone |
+| PATCH | `/books/{book_id}/reviews/{review_id}` | 리뷰 수정 | User (작성자) |
+| PATCH | `/reviews/{review_id}` | 리뷰 수정 (레거시) | User (작성자) |
 | DELETE | `/reviews/{review_id}` | 리뷰 삭제 | User (작성자)/Admin |
 
 ### 8. 찜하기 (Favorites) - 3개
@@ -166,48 +284,129 @@ uvicorn app.main:app --reload
 ### 9. 랭킹 (Rankings) - 1개
 | Method | URL | 설명 | 권한 |
 |--------|-----|------|------|
-| GET | `/rankings` | 랭킹 조회 (type, ageGroup, gender) | Anyone |
+| GET | `/rankings` | 랭킹 조회 (type, ageGroup, gender, limit) | Anyone |
 
-### 10. 세일 & 정산 - 3개
+### 10. 세일 (Sales) - 2개
 | Method | URL | 설명 | 권한 |
 |--------|-----|------|------|
 | POST | `/sales` | 타임 세일 생성 | Seller |
 | POST | `/sales/{sale_id}/books` | 세일 도서 추가 | Seller |
+
+### 11. 정산 (Settlements) - 1개
+| Method | URL | 설명 | 권한 |
+|--------|-----|------|------|
 | GET | `/settlements` | 정산 내역 조회 | Seller |
 
-## 🔐 인증 & 권한
+### 12. 관리자 (Admin) - 2개
+| Method | URL | 설명 | 권한 |
+|--------|-----|------|------|
+| GET | `/admin/orders` | 전체 주문 현황 | Admin |
+| POST | `/admin/settlements/calculate` | 정산 데이터 생성 | Admin |
 
-### JWT 토큰 인증
-```bash
-# 로그인 후 받은 access_token을 헤더에 포함
-Authorization: Bearer <access_token>
+---
+
+## 성능/보안 고려사항
+
+### 성능 최적화
+- **Redis 캐싱**: 랭킹 데이터를 Redis에 캐싱하여 DB 부하 감소
+- **스케줄러**: APScheduler로 10분마다 랭킹 데이터 자동 갱신
+- **페이지네이션**: 목록 조회 API에 페이지네이션 적용
+- **인덱스**: 주요 조회 컬럼에 DB 인덱스 적용 (email, isbn, status 등)
+
+### 보안
+- **비밀번호 해싱**: Argon2id (OWASP 권장 알고리즘)
+- **JWT 토큰**: Access/Refresh 토큰 분리, 만료 시간 설정
+- **Rate Limiting**: slowapi를 통한 IP 기반 요청 제한
+- **CORS**: 허용 Origin 명시적 설정
+- **계정 비활성화**: 관리자가 사용자 계정 비활성화 가능
+- **권한 검증**: 모든 엔드포인트에 역할 기반 접근 제어
+
+### 데이터 무결성
+- **트랜잭션**: Unit of Work 패턴으로 원자성 보장
+- **외래 키**: SQLAlchemy 관계 설정으로 참조 무결성 유지
+
+---
+
+## 한계와 개선 계획
+
+### 현재 한계
+1. **검색 기능**: 단순 LIKE 검색 (Full-text search 미지원)
+2. **파일 업로드**: 도서 이미지 업로드 미구현
+3. **결제 시스템**: 실제 PG 연동 없음
+4. **알림 시스템**: 푸시 알림 미구현
+5. **다국어 지원**: 한국어만 지원
+
+### 개선 계획
+1. **Elasticsearch 도입**: 고급 검색 기능
+2. **S3 연동**: 이미지 파일 저장
+3. **WebSocket**: 실시간 알림
+4. **CI/CD**: GitHub Actions 파이프라인 구축
+5. **모니터링**: Prometheus + Grafana 연동
+6. **테스트 커버리지**: 90% 이상 목표
+
+---
+
+## 아키텍처
+
+### 프로젝트 구조
+```
+app/
+├── api/                    # Presentation Layer
+│   ├── routers/           # 12개 API 라우터
+│   │   ├── auth.py        # 인증 (4 endpoints)
+│   │   ├── users.py       # 회원 (6 endpoints)
+│   │   ├── sellers.py     # 판매자 (3 endpoints)
+│   │   ├── books.py       # 도서 (5 endpoints)
+│   │   ├── carts.py       # 장바구니 (4 endpoints)
+│   │   ├── orders.py      # 주문 (4 endpoints)
+│   │   ├── reviews.py     # 리뷰 (5 endpoints)
+│   │   ├── favorites.py   # 찜하기 (3 endpoints)
+│   │   ├── rankings.py    # 랭킹 (1 endpoint)
+│   │   ├── sales.py       # 세일 (2 endpoints)
+│   │   ├── settlements.py # 정산 (1 endpoint)
+│   │   └── admin.py       # 관리자 (2 endpoints)
+│   └── dependencies.py    # 의존성 주입 & JWT 인증
+├── services/              # Business Logic Layer
+├── repositories/          # Data Access Layer
+├── models/                # SQLAlchemy ORM Models (13개 테이블)
+├── schemas/               # Pydantic DTOs
+├── core/
+│   ├── config.py          # 환경 설정
+│   ├── database.py        # DB 연결
+│   ├── redis.py           # Redis 연결
+│   ├── limiter.py         # Rate Limiter
+│   └── security.py        # JWT & 비밀번호 해싱
+├── exceptions/            # 커스텀 예외 & 핸들러
+├── middleware/            # 로깅 미들웨어
+└── main.py                # Application Entry Point
+
+tests/                     # 테스트 코드
+├── conftest.py            # pytest fixtures (Redis Mocking 포함)
+├── test_auth.py           # 인증 테스트
+├── test_users.py          # 사용자 테스트 (계정 비활성화 포함)
+├── test_sellers.py        # 판매자 테스트
+├── test_books.py          # 도서 테스트
+├── test_carts.py          # 장바구니 테스트
+├── test_orders.py         # 주문 테스트
+├── test_reviews.py        # 리뷰 테스트 (수정 기능 포함)
+├── test_favorites.py      # 찜하기 테스트
+├── test_admin.py          # 관리자 테스트 (정산 기능)
+└── test_rankings.py       # 랭킹 테스트
+
+scripts/
+└── seed.py                # 시드 데이터 생성 스크립트
 ```
 
-### 권한 레벨
-| 권한 | 설명 |
-|------|------|
-| `user` | 일반 사용자 (기본) |
-| `seller` | 판매자 (도서 등록 가능) |
-| `admin` | 관리자 (전체 권한) |
+### 레이어 아키텍처
+```
+API (Router) → Service → Repository → Model
+     ↓            ↓           ↓          ↓
+  HTTP 처리   비즈니스 로직   DB 쿼리   ORM 모델
+```
 
-## 📊 데이터베이스 스키마
+---
 
-### 주요 테이블 (13개)
-- `user` - 사용자
-- `sellerProfiles` - 판매자 프로필
-- `book` - 도서
-- `cart` - 장바구니
-- `order` - 주문
-- `orderItem` - 주문 상품
-- `review` - 리뷰
-- `favorite` - 찜하기
-- `ranking` - 랭킹
-- `saleInform` - 세일 정보
-- `saleBookList` - 세일 도서 목록
-- `settlement` - 정산
-- `settlementOrder` - 정산 주문
-
-## 🧪 테스트
+## 테스트
 
 ```bash
 # 전체 테스트 실행
@@ -224,18 +423,22 @@ pytest --cov=app tests/
 ```
 
 ### 테스트 구성
-| 파일 | 테스트 대상 | 테스트 케이스 |
-|------|-------------|---------------|
+| 파일 | 테스트 대상 | 주요 테스트 케이스 |
+|------|-------------|-------------------|
 | test_auth.py | 회원가입, 로그인, 토큰 | 12개 |
-| test_users.py | 프로필, 비밀번호, 관리자 | 10개 |
+| test_users.py | 프로필, 비밀번호, 권한, 계정 비활성화 | 16개 |
 | test_sellers.py | 판매자 등록, 조회, 수정 | 6개 |
 | test_books.py | 도서 CRUD, 검색, 정렬 | 14개 |
 | test_carts.py | 장바구니 CRUD | 10개 |
 | test_orders.py | 주문 생성, 조회, 취소 | 10개 |
-| test_reviews.py | 리뷰 작성, 조회, 삭제 | 10개 |
+| test_reviews.py | 리뷰 작성, 수정, 삭제 | 18개 |
 | test_favorites.py | 찜하기 등록, 취소, 조회 | 8개 |
+| test_admin.py | 관리자 주문 조회, 정산 생성 | 8개 |
+| test_rankings.py | 랭킹 조회, 캐싱 | 7개 |
 
-## 📦 응답 형식
+---
+
+## 응답 형식
 
 ### 성공 응답
 ```json
@@ -251,7 +454,8 @@ pytest --cov=app tests/
 {
   "status": "error",
   "data": null,
-  "message": "Error message"
+  "message": "Error message",
+  "error_code": "ERROR_CODE"
 }
 ```
 
@@ -261,49 +465,58 @@ pytest --cov=app tests/
 | 200 | OK | 요청 성공 |
 | 201 | Created | 리소스 생성 성공 |
 | 400 | Bad Request | 잘못된 요청 |
-| 401 | Unauthorized | 인증 필요 |
+| 401 | Unauthorized | 인증 필요 또는 비활성화된 계정 |
 | 403 | Forbidden | 권한 없음 |
 | 404 | Not Found | 리소스 없음 |
 | 409 | Conflict | 리소스 중복 |
 | 422 | Unprocessable Entity | 유효성 검증 실패 |
+| 429 | Too Many Requests | Rate Limit 초과 |
 | 500 | Internal Server Error | 서버 에러 |
 
-## ⚙️ 환경 설정
+---
 
-### .env 파일
-```env
-# Application
-APP_NAME="BookStore API"
-APP_VERSION="1.0.0"
-DEBUG=True
+## 기술 스택
 
-# Database (MySQL)
-MYSQL_ROOT_PASSWORD=rootpassword
-MYSQL_DATABASE=bookStoreDb
-MYSQL_USER=bookstore_user
-MYSQL_PASSWORD=bookstore_pass
-DATABASE_URL=mysql+pymysql://bookstore_user:bookstore_pass@db:3306/bookStoreDb
+### Backend
+| 라이브러리 | 용도 |
+|-----------|------|
+| **FastAPI** | 웹 프레임워크 |
+| **Uvicorn** | ASGI 서버 |
+| **SQLAlchemy** | ORM |
+| **Pydantic** | 데이터 검증 |
+| **APScheduler** | 스케줄링 (랭킹 캐시 갱신) |
 
-# JWT
-SECRET_KEY=your-secret-key
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-REFRESH_TOKEN_EXPIRE_DAYS=7
+### 데이터베이스 & 캐시
+| 라이브러리 | 용도 |
+|-----------|------|
+| **MySQL 8.0** | RDBMS |
+| **Redis** | 캐시 (랭킹 데이터) |
+| **PyMySQL** | MySQL 드라이버 |
+| **redis-py** | Redis 클라이언트 |
+| **Alembic** | DB 마이그레이션 |
 
-# CORS
-CORS_ORIGINS=["http://localhost:3000"]
-```
+### 보안
+| 라이브러리 | 용도 |
+|-----------|------|
+| **PyJWT** | JWT 토큰 |
+| **pwdlib[argon2]** | Argon2id 비밀번호 해싱 |
+| **slowapi** | Rate Limiting |
 
-## 🐳 Docker 설정
+### 테스트
+| 라이브러리 | 용도 |
+|-----------|------|
+| **pytest** | 테스트 프레임워크 |
+| **pytest-asyncio** | 비동기 테스트 |
+| **httpx** | HTTP 테스트 클라이언트 |
+
+---
+
+## Docker 설정
 
 ### docker-compose.yml 구성
-- **db**: MySQL 8.0 데이터베이스
-  - 포트: 3306
-  - 볼륨: db_data (영구 저장)
-  - 헬스체크 포함
-- **app**: FastAPI 애플리케이션
-  - 포트: 8000
-  - Hot Reload 지원
-  - db 서비스 의존
+- **db**: MySQL 8.0 데이터베이스 (포트: 3306)
+- **redis**: Redis 캐시 서버 (포트: 6379)
+- **app**: FastAPI 애플리케이션 (포트: 8000)
 
 ### 명령어
 ```bash
@@ -320,151 +533,8 @@ docker-compose down
 docker-compose down -v
 ```
 
-## 📁 프로젝트 구조 설명
+---
 
-### 레이어 아키텍처
-```
-API (Router) → Service → Repository → Model
-     ↓            ↓           ↓          ↓
-  HTTP 처리   비즈니스 로직   DB 쿼리   ORM 모델
-```
-
-### 레이어별 역할
-| 레이어 | 파일 위치 | 역할 |
-|--------|-----------|------|
-| Router | `api/routers/` | HTTP 요청/응답 처리 |
-| Service | `services/` | 비즈니스 로직, 예외 처리 |
-| Repository | `repositories/` | DB CRUD 작업 |
-| Model | `models/` | SQLAlchemy ORM 정의 |
-| Schema | `schemas/` | Pydantic DTO 검증 |
-
-## 🛠️ 개발 도구
-
-### 코드 품질 도구
-
-이 프로젝트는 다음 개발 도구들을 사용합니다:
-
-| 도구 | 버전 | 용도 |
-|------|------|------|
-| **Black** | 24.10.0 | 코드 포맷팅 |
-| **isort** | 5.13.2 | Import 정렬 |
-| **Flake8** | 7.1.1 | 코드 린팅 |
-| **mypy** | - | 타입 체킹 |
-| **pre-commit** | - | Git Hook 자동화 |
-
-### Pre-commit 설정
-
-```bash
-# pre-commit 설치
-pip install pre-commit
-
-# Git Hook 설치
-pre-commit install
-
-# 전체 파일 검사
-pre-commit run --all-files
-```
-
-### 코드 스타일 규칙
-- **Line Length**: 88자 (Black 기본값)
-- **Python Version**: 3.12
-- **Import 정렬**: Black 프로필 사용
-
-## 🗄️ 데이터베이스 마이그레이션 (Alembic)
-
-프로덕션 환경에서는 Alembic을 사용하여 데이터베이스 스키마를 관리합니다.
-
-### 마이그레이션 명령어
-
-```bash
-# 새 마이그레이션 생성 (자동 감지)
-alembic revision --autogenerate -m "설명"
-
-# 마이그레이션 적용
-alembic upgrade head
-
-# 한 단계 롤백
-alembic downgrade -1
-
-# 마이그레이션 히스토리 확인
-alembic history
-
-# 현재 버전 확인
-alembic current
-```
-
-### 개발 환경 vs 프로덕션
-
-| 환경 | 스키마 관리 방식 |
-|------|-----------------|
-| **개발** | `Base.metadata.create_all()` (main.py) |
-| **프로덕션** | `alembic upgrade head` |
-
-## 🔄 트랜잭션 관리
-
-### Unit of Work 패턴
-
-주문 생성과 같이 여러 DB 작업이 필요한 경우, Unit of Work 패턴으로 트랜잭션 원자성을 보장합니다.
-
-```python
-# app/services/order_service.py
-from app.core.database import UnitOfWork
-
-def create_order(self, user_id: int, order_data: OrderCreate):
-    with UnitOfWork(self.db) as uow:
-        # 1. 주문 생성
-        order = self.order_repo.create(order_data)
-        # 2. 주문 아이템 생성
-        for item in items:
-            self.order_repo.add_item(item)
-        # 3. 재고 업데이트
-        self.book_repo.update_stats(book, ...)
-        # 4. 장바구니 비우기
-        self.cart_repo.delete_multiple(carts)
-
-        uow.commit()  # 모두 성공 시 한 번에 커밋
-```
-
-### Repository 계층
-
-- Repository 메서드는 기본적으로 **커밋하지 않음** (`commit=False`)
-- 단일 작업 시 `commit=True` 전달 가능
-- 복합 트랜잭션은 Service 계층에서 UnitOfWork로 관리
-
-## 🔧 기술 스택
-
-### Backend
-| 라이브러리 | 용도 |
-|-----------|------|
-| **FastAPI** | 웹 프레임워크 |
-| **Uvicorn** | ASGI 서버 |
-| **Gunicorn** | Production WSGI 서버 |
-| **SQLAlchemy** | ORM |
-| **Pydantic** | 데이터 검증 |
-| **pydantic-settings** | 환경변수 관리 |
-
-### 보안
-| 라이브러리 | 용도 |
-|-----------|------|
-| **PyJWT** | JWT 토큰 생성/검증 |
-| **pwdlib[argon2]** | Argon2id 비밀번호 해싱 (OWASP 권장) |
-| **bcrypt** | 추가 해싱 지원 |
-| **cryptography** | 암호화 라이브러리 |
-
-### 데이터베이스
-| 라이브러리 | 용도 |
-|-----------|------|
-| **PyMySQL** | MySQL 드라이버 |
-| **MySQL 8.0** | DBMS |
-| **Alembic** | 데이터베이스 마이그레이션 |
-
-### 테스트
-| 라이브러리 | 용도 |
-|-----------|------|
-| **pytest** | 테스트 프레임워크 |
-| **pytest-asyncio** | 비동기 테스트 |
-| **httpx** | HTTP 테스트 클라이언트 |
-
-## 📜 라이선스
+## 라이선스
 
 이 프로젝트는 교육 목적으로 작성되었습니다.
