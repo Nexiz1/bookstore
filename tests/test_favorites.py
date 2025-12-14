@@ -5,6 +5,7 @@ Favorites API 테스트
 - GET /favorites: 내 찜 목록 조회
 """
 import pytest
+from tests.conftest import assert_success_response, assert_error_response
 
 
 class TestAddFavorite:
@@ -17,8 +18,7 @@ class TestAddFavorite:
             headers=buyer_headers
         )
 
-        assert response.status_code == 201
-        data = response.json()
+        data = assert_success_response(response, status_code=201)
         assert data["data"]["book_id"] == created_book["id"]
         assert data["data"]["book_title"] == created_book["title"]
 
@@ -31,19 +31,19 @@ class TestAddFavorite:
             headers=buyer_headers
         )
 
-        assert response.status_code == 409
+        assert_error_response(response, status_code=409)
 
     def test_add_favorite_nonexistent_book(self, client, buyer_headers):
         """존재하지 않는 도서"""
         response = client.post("/books/99999/favorites", headers=buyer_headers)
 
-        assert response.status_code == 404
+        assert_error_response(response, status_code=404)
 
     def test_add_favorite_without_auth(self, client, created_book):
         """인증 없이 찜하기"""
         response = client.post(f"/books/{created_book['id']}/favorites")
 
-        assert response.status_code == 401
+        assert_error_response(response, status_code=401)
 
 
 class TestRemoveFavorite:
@@ -60,7 +60,7 @@ class TestRemoveFavorite:
             headers=buyer_headers
         )
 
-        assert response.status_code == 200
+        assert_success_response(response, status_code=200)
 
     def test_remove_favorite_not_found(self, client, buyer_headers, created_book):
         """찜하지 않은 도서 취소 시도"""
@@ -69,10 +69,7 @@ class TestRemoveFavorite:
             headers=buyer_headers
         )
 
-        assert response.status_code == 404
-        data = response.json()
-        assert data["status"] == "error"
-        assert data["message"] is not None
+        assert_error_response(response, status_code=404)
 
 
 class TestGetFavorites:
@@ -82,8 +79,7 @@ class TestGetFavorites:
         """빈 찜 목록"""
         response = client.get("/favorites", headers=buyer_headers)
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["favorites"] == []
         assert data["data"]["total"] == 0
 
@@ -94,8 +90,7 @@ class TestGetFavorites:
 
         response = client.get("/favorites", headers=buyer_headers)
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["total"] == 1
         assert data["data"]["favorites"][0]["book_id"] == created_book["id"]
 
@@ -103,4 +98,4 @@ class TestGetFavorites:
         """인증 없이 조회"""
         response = client.get("/favorites")
 
-        assert response.status_code == 401
+        assert_error_response(response, status_code=401)

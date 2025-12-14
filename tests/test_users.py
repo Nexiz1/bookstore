@@ -8,6 +8,7 @@ Users API 테스트
 - PATCH /users/{user_id}/deactivate: 사용자 계정 비활성화 (Admin)
 """
 import pytest
+from tests.conftest import assert_success_response, assert_error_response
 
 
 class TestGetMyProfile:
@@ -17,9 +18,7 @@ class TestGetMyProfile:
         """정상 프로필 조회"""
         response = client.get("/users/me", headers=auth_headers)
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "success"
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["email"] == test_user_data["email"]
         assert data["data"]["name"] == test_user_data["name"]
 
@@ -27,7 +26,7 @@ class TestGetMyProfile:
         """인증 없이 조회 시도"""
         response = client.get("/users/me")
 
-        assert response.status_code == 401
+        assert_error_response(response, status_code=401, error_code="AUTH_UNAUTHORIZED")
 
 
 class TestUpdateMyProfile:
@@ -42,8 +41,7 @@ class TestUpdateMyProfile:
         }
         response = client.patch("/users/me", json=update_data, headers=auth_headers)
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["name"] == "수정된이름"
         assert data["data"]["address"] == "서울시 송파구"
 
@@ -52,8 +50,8 @@ class TestUpdateMyProfile:
         update_data = {"address": "부산시 해운대구"}
         response = client.patch("/users/me", json=update_data, headers=auth_headers)
 
-        assert response.status_code == 200
-        assert response.json()["data"]["address"] == "부산시 해운대구"
+        data = assert_success_response(response, status_code=200)
+        assert data["data"]["address"] == "부산시 해운대구"
 
 
 class TestChangePassword:
@@ -67,15 +65,14 @@ class TestChangePassword:
         }
         response = client.post("/users/me/password", json=password_data, headers=auth_headers)
 
-        assert response.status_code == 200
-        assert response.json()["status"] == "success"
+        assert_success_response(response, status_code=200, has_data=False)
 
         # 새 비밀번호로 로그인 확인
         login_response = client.post("/auth/login", json={
             "email": test_user_data["email"],
             "password": "newpassword123"
         })
-        assert login_response.status_code == 200
+        assert_success_response(login_response, status_code=200)
 
     def test_change_password_wrong_current(self, client, auth_headers):
         """현재 비밀번호 틀림"""
@@ -85,7 +82,7 @@ class TestChangePassword:
         }
         response = client.post("/users/me/password", json=password_data, headers=auth_headers)
 
-        assert response.status_code == 401
+        assert_error_response(response, status_code=401, error_code="AUTH_INVALID_CREDENTIALS")
 
     def test_change_password_short_new(self, client, auth_headers, test_user_data):
         """새 비밀번호가 너무 짧음"""
@@ -95,7 +92,7 @@ class TestChangePassword:
         }
         response = client.post("/users/me/password", json=password_data, headers=auth_headers)
 
-        assert response.status_code == 422
+        assert_error_response(response, status_code=422, error_code="VALIDATION_FAILED")
 
 
 class TestAdminUserManagement:
@@ -109,15 +106,14 @@ class TestAdminUserManagement:
         # 전체 사용자 조회
         response = client.get("/users/", headers=admin_headers)
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["total"] == 2
 
     def test_get_all_users_as_normal_user(self, client, auth_headers):
         """일반 사용자로 전체 조회 시도 (권한 없음)"""
         response = client.get("/users/", headers=auth_headers)
 
-        assert response.status_code == 403
+        assert_error_response(response, status_code=403, error_code="AUTH_FORBIDDEN")
 
     def test_update_user_role(self, client, admin_headers, test_user_data):
         """사용자 권한 변경"""
@@ -132,8 +128,8 @@ class TestAdminUserManagement:
             headers=admin_headers
         )
 
-        assert response.status_code == 200
-        assert response.json()["data"]["role"] == "seller"
+        data = assert_success_response(response, status_code=200)
+        assert data["data"]["role"] == "seller"
 
 
 class TestUserDeactivation:
@@ -157,9 +153,7 @@ class TestUserDeactivation:
             headers=admin_headers
         )
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "success"
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["is_active"] is False
         assert data["message"] == "User account deactivated successfully"
 
@@ -180,7 +174,7 @@ class TestUserDeactivation:
             headers=auth_headers
         )
 
-        assert response.status_code == 403
+        assert_error_response(response, status_code=403, error_code="AUTH_FORBIDDEN")
 
     def test_deactivate_admin_forbidden(self, client, admin_headers, db_session):
         """Admin 계정 비활성화 시도 (403 Forbidden)"""
@@ -195,7 +189,7 @@ class TestUserDeactivation:
             headers=admin_headers
         )
 
-        assert response.status_code == 403
+        assert_error_response(response, status_code=403, error_code="AUTH_FORBIDDEN")
 
     def test_deactivate_user_not_found(self, client, admin_headers):
         """존재하지 않는 사용자 비활성화 시도 (404 Not Found)"""
@@ -204,7 +198,8 @@ class TestUserDeactivation:
             headers=admin_headers
         )
 
-        assert response.status_code == 404
+        # 실제 API는 404 또는 다른 코드를 반환할 수 있음
+        assert_error_response(response, status_code=404)
 
     def test_deactivated_user_login_blocked(self, client, deactivated_user):
         """비활성화된 계정으로 로그인 시도 (401 Unauthorized)"""
@@ -214,7 +209,8 @@ class TestUserDeactivation:
         }
         response = client.post("/auth/login", json=login_data)
 
-        assert response.status_code == 401
+        # 비활성화된 사용자 로그인 시도 시 401 반환
+        assert_error_response(response, status_code=401)
 
     def test_deactivated_user_api_access_blocked(self, client, test_user_data, admin_headers, db_session):
         """비활성화된 계정의 토큰으로 API 접근 시도 (401 Unauthorized)"""
@@ -229,7 +225,7 @@ class TestUserDeactivation:
 
         # 정상 접근 확인
         me_response = client.get("/users/me", headers=user_headers)
-        assert me_response.status_code == 200
+        assert_success_response(me_response, status_code=200)
         user_id = me_response.json()["data"]["id"]
 
         # Admin이 계정 비활성화
@@ -237,4 +233,5 @@ class TestUserDeactivation:
 
         # 비활성화된 토큰으로 API 접근 시도
         blocked_response = client.get("/users/me", headers=user_headers)
-        assert blocked_response.status_code == 401
+        # 비활성화된 사용자의 토큰 접근 차단
+        assert_error_response(blocked_response, status_code=401)

@@ -5,6 +5,7 @@ Reviews API 테스트
 - DELETE /reviews/{review_id}: 리뷰 삭제
 """
 import pytest
+from tests.conftest import assert_success_response, assert_error_response
 
 
 @pytest.fixture
@@ -44,8 +45,7 @@ class TestCreateReview:
             headers=buyer_headers
         )
 
-        assert response.status_code == 201
-        data = response.json()
+        data = assert_success_response(response, status_code=201)
         assert data["data"]["rating"] == 5
         assert data["data"]["comment"] == "정말 좋은 책입니다!"
 
@@ -62,7 +62,7 @@ class TestCreateReview:
             headers=buyer_headers
         )
 
-        assert response.status_code == 404
+        assert_error_response(response, status_code=404)
 
     def test_create_review_duplicate(self, client, buyer_headers, completed_order):
         """중복 리뷰 작성 시도"""
@@ -83,7 +83,7 @@ class TestCreateReview:
             headers=buyer_headers
         )
 
-        assert response.status_code == 409
+        assert_error_response(response, status_code=409)
 
     def test_create_review_invalid_rating(self, client, buyer_headers, completed_order):
         """잘못된 평점 (1-5 범위 외)"""
@@ -111,8 +111,7 @@ class TestGetReviews:
         """빈 리뷰 목록"""
         response = client.get(f"/books/{created_book['id']}/reviews")
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["reviews"] == []
         assert data["data"]["total"] == 0
 
@@ -131,8 +130,7 @@ class TestGetReviews:
 
         response = client.get(f"/books/{book_id}/reviews")
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["total"] == 1
         assert data["data"]["average_rating"] == 4.0
 
@@ -161,7 +159,7 @@ class TestDeleteReview:
         # 리뷰 삭제
         response = client.delete(f"/reviews/{review_id}", headers=buyer_headers)
 
-        assert response.status_code == 200
+        assert_success_response(response, status_code=200)
 
     def test_delete_review_not_owner(self, client, buyer_headers, completed_order, test_user_data, auth_headers):
         """본인 리뷰가 아닌 경우"""
@@ -184,16 +182,13 @@ class TestDeleteReview:
         # 다른 사용자로 삭제 시도 (auth_headers는 seller)
         response = client.delete(f"/reviews/{review_id}", headers=auth_headers)
 
-        assert response.status_code == 403
+        assert_error_response(response, status_code=403)
 
     def test_delete_review_not_found(self, client, buyer_headers):
         """존재하지 않는 리뷰"""
         response = client.delete("/reviews/99999", headers=buyer_headers)
 
-        assert response.status_code == 404
-        data = response.json()
-        assert data["status"] == "error"
-        assert data["message"] is not None
+        assert_error_response(response, status_code=404)
 
 
 class TestUpdateReview:
@@ -228,9 +223,7 @@ class TestUpdateReview:
             headers=buyer_headers
         )
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "success"
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["rating"] == 5
         assert data["data"]["comment"] == "다시 읽어보니 정말 좋은 책입니다!"
         assert data["message"] == "Review updated successfully"
@@ -261,8 +254,7 @@ class TestUpdateReview:
             headers=buyer_headers
         )
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["rating"] == 4
         assert data["data"]["comment"] == "원래 코멘트"  # 코멘트는 유지
 
@@ -292,8 +284,7 @@ class TestUpdateReview:
             headers=buyer_headers
         )
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["rating"] == 4  # 평점은 유지
         assert data["data"]["comment"] == "수정된 코멘트입니다"
 
@@ -323,9 +314,7 @@ class TestUpdateReview:
             headers=auth_headers  # seller의 헤더
         )
 
-        assert response.status_code == 403
-        data = response.json()
-        assert data["status"] == "error"
+        assert_error_response(response, status_code=403)
 
     def test_update_review_not_found(self, client, buyer_headers):
         """존재하지 않는 리뷰 수정 시도 (404 Not Found)"""
@@ -336,9 +325,7 @@ class TestUpdateReview:
             headers=buyer_headers
         )
 
-        assert response.status_code == 404
-        data = response.json()
-        assert data["status"] == "error"
+        assert_error_response(response, status_code=404)
 
     def test_update_review_invalid_rating(self, client, buyer_headers, completed_order):
         """잘못된 평점으로 수정 시도 (422 Validation Error)"""

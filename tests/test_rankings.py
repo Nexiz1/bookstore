@@ -3,6 +3,7 @@ Rankings API 테스트
 - GET /rankings: 도서 랭킹 조회 (Redis 캐시 + DB 폴백)
 """
 import pytest
+from tests.conftest import assert_success_response, assert_error_response
 
 
 class TestGetRankings:
@@ -12,9 +13,7 @@ class TestGetRankings:
         """랭킹 데이터가 없을 때 빈 목록 반환"""
         response = client.get("/rankings/")
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "success"
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["rankings"] == []
         assert data["data"]["ranking_type"] == "purchaseCount"
 
@@ -28,8 +27,7 @@ class TestGetRankings:
         # 판매량 순 랭킹 조회
         response = client.get("/rankings/?type=purchaseCount")
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["ranking_type"] == "purchaseCount"
         assert len(data["data"]["rankings"]) >= 1
 
@@ -55,8 +53,7 @@ class TestGetRankings:
         # 평점 순 랭킹 조회
         response = client.get("/rankings/?type=averageRating")
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["ranking_type"] == "averageRating"
         assert len(data["data"]["rankings"]) >= 1
 
@@ -81,8 +78,7 @@ class TestGetRankings:
         # limit=3으로 조회
         response = client.get("/rankings/?limit=3")
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert len(data["data"]["rankings"]) <= 3
 
     def test_get_rankings_invalid_type(self, client):
@@ -100,7 +96,7 @@ class TestRankingsCache:
         # 랭킹 조회 시 에러 없이 동작해야 함
         response = client.get("/rankings/")
 
-        assert response.status_code == 200
+        assert_success_response(response, status_code=200)
 
     def test_rankings_cache_fallback_to_db(self, client, buyer_headers, created_book, mock_redis):
         """캐시 미스 시 DB에서 조회 후 캐싱"""
@@ -115,6 +111,5 @@ class TestRankingsCache:
         # 랭킹 조회 (DB 폴백 후 캐싱)
         response = client.get("/rankings/?type=purchaseCount")
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert len(data["data"]["rankings"]) >= 1

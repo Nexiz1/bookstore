@@ -5,6 +5,7 @@ Sellers API 테스트
 - PATCH /sellers/me: 판매자 정보 수정
 """
 import pytest
+from tests.conftest import assert_success_response, assert_error_response
 
 
 class TestSellerRegistration:
@@ -14,9 +15,7 @@ class TestSellerRegistration:
         """정상 판매자 등록"""
         response = client.post("/sellers/", json=test_seller_data, headers=auth_headers)
 
-        assert response.status_code == 201
-        data = response.json()
-        assert data["status"] == "success"
+        data = assert_success_response(response, status_code=201)
         assert data["data"]["business_name"] == test_seller_data["business_name"]
 
     def test_register_seller_duplicate(self, client, auth_headers, test_seller_data):
@@ -27,13 +26,13 @@ class TestSellerRegistration:
         # 동일 계정으로 재등록 시도
         response = client.post("/sellers/", json=test_seller_data, headers=auth_headers)
 
-        assert response.status_code == 409
+        assert_error_response(response, status_code=409)
 
     def test_register_seller_without_auth(self, client, test_seller_data):
         """인증 없이 등록 시도"""
         response = client.post("/sellers/", json=test_seller_data)
 
-        assert response.status_code == 401
+        assert_error_response(response, status_code=401)
 
 
 class TestGetSellerProfile:
@@ -43,15 +42,14 @@ class TestGetSellerProfile:
         """정상 판매자 정보 조회"""
         response = client.get("/sellers/me", headers=seller_auth_headers)
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["business_name"] == test_seller_data["business_name"]
 
     def test_get_seller_profile_not_seller(self, client, auth_headers):
         """판매자가 아닌 사용자의 조회 시도"""
         response = client.get("/sellers/me", headers=auth_headers)
 
-        assert response.status_code == 403
+        assert_error_response(response, status_code=403)
 
 
 class TestUpdateSellerProfile:
@@ -65,7 +63,6 @@ class TestUpdateSellerProfile:
         }
         response = client.patch("/sellers/me", json=update_data, headers=seller_auth_headers)
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["address"] == "서울시 마포구"
         assert data["data"]["payout_account"] == "123-456-789012"

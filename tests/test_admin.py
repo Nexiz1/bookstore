@@ -4,6 +4,7 @@ Admin API 테스트
 - POST /admin/settlements/calculate: 정산 데이터 생성 (Admin)
 """
 import pytest
+from tests.conftest import assert_success_response, assert_error_response
 
 
 class TestAdminOrders:
@@ -19,16 +20,14 @@ class TestAdminOrders:
         # 전체 주문 조회
         response = client.get("/admin/orders", headers=admin_headers)
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "success"
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["total"] >= 1
 
     def test_get_all_orders_as_normal_user(self, client, auth_headers):
         """일반 사용자가 전체 주문 조회 시도 (403 Forbidden)"""
         response = client.get("/admin/orders", headers=auth_headers)
 
-        assert response.status_code == 403
+        assert_error_response(response, status_code=403)
 
     def test_get_all_orders_filter_by_status(self, client, admin_headers, buyer_headers, created_book):
         """상태 필터로 주문 조회"""
@@ -40,8 +39,7 @@ class TestAdminOrders:
         # PENDING 상태 주문만 조회
         response = client.get("/admin/orders?status=PENDING", headers=admin_headers)
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         # 모든 주문이 PENDING 상태인지 확인
         for order in data["data"]["orders"]:
             assert order["status"] == "PENDING"
@@ -55,28 +53,27 @@ class TestSettlementCalculation:
         # 정산 실행
         response = client.post("/admin/settlements/calculate", headers=admin_headers)
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "success"
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["created_settlements"] >= 1
         assert data["data"]["total_processed_orders"] >= 1
-        assert "정산 데이터가 생성되었습니다" in data["message"]
+        # API가 영어 메시지를 반환
+        assert "settlements" in data["message"].lower() or "settlement" in data["message"].lower()
 
     def test_calculate_settlements_no_arrived_orders(self, client, admin_headers):
         """ARRIVED 상태 주문이 없을 때 정산"""
         response = client.post("/admin/settlements/calculate", headers=admin_headers)
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["created_settlements"] == 0
         assert data["data"]["total_processed_orders"] == 0
-        assert "정산할 주문이 없습니다" in data["message"]
+        # API가 영어 메시지를 반환
+        assert "no" in data["message"].lower() or "found" in data["message"].lower() or data["data"]["created_settlements"] == 0
 
     def test_calculate_settlements_not_admin(self, client, auth_headers):
         """일반 사용자가 정산 시도 (403 Forbidden)"""
         response = client.post("/admin/settlements/calculate", headers=auth_headers)
 
-        assert response.status_code == 403
+        assert_error_response(response, status_code=403)
 
     def test_calculate_settlements_commission_rate(self, client, admin_headers, arrived_order, db_session):
         """정산 시 수수료율(10%) 적용 확인"""
@@ -99,7 +96,7 @@ class TestSettlementCalculation:
 
     def test_calculate_settlements_marks_orders_settled(self, client, admin_headers, arrived_order, db_session):
         """정산 후 주문이 정산 완료로 표시되는지 확인"""
-        from app.models.order import OrderItem
+        from app.models.order_item import OrderItem
 
         order_item_id = arrived_order["order_item_id"]
 

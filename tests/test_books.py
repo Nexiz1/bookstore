@@ -7,6 +7,7 @@ Books API 테스트
 - DELETE /books/{book_id}: 도서 삭제
 """
 import pytest
+from tests.conftest import assert_success_response, assert_error_response
 
 
 class TestCreateBook:
@@ -16,9 +17,7 @@ class TestCreateBook:
         """정상 도서 등록"""
         response = client.post("/books/", json=test_book_data, headers=seller_auth_headers)
 
-        assert response.status_code == 201
-        data = response.json()
-        assert data["status"] == "success"
+        data = assert_success_response(response, status_code=201)
         assert data["data"]["title"] == test_book_data["title"]
         assert data["data"]["author"] == test_book_data["author"]
         assert float(data["data"]["price"]) == test_book_data["price"]
@@ -27,13 +26,13 @@ class TestCreateBook:
         """판매자가 아닌 사용자의 등록 시도"""
         response = client.post("/books/", json=test_book_data, headers=auth_headers)
 
-        assert response.status_code == 403
+        assert_error_response(response, status_code=403)
 
     def test_create_book_without_auth(self, client, test_book_data):
         """인증 없이 등록 시도"""
         response = client.post("/books/", json=test_book_data)
 
-        assert response.status_code == 401
+        assert_error_response(response, status_code=401)
 
 
 class TestGetBooks:
@@ -43,8 +42,7 @@ class TestGetBooks:
         """빈 도서 목록 조회"""
         response = client.get("/books/")
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["books"] == []
         assert data["data"]["total"] == 0
 
@@ -55,8 +53,7 @@ class TestGetBooks:
 
         response = client.get("/books/")
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["total"] == 1
 
     def test_get_books_with_keyword(self, client, seller_auth_headers, test_book_data):
@@ -65,7 +62,7 @@ class TestGetBooks:
 
         response = client.get("/books/", params={"keyword": "테스트"})
 
-        assert response.status_code == 200
+        assert_success_response(response, status_code=200)
 
     def test_get_books_with_pagination(self, client, seller_auth_headers, test_book_data):
         """페이지네이션"""
@@ -78,8 +75,7 @@ class TestGetBooks:
 
         response = client.get("/books/", params={"page": 1, "size": 2})
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert len(data["data"]["books"]) <= 2
 
     def test_get_books_with_sort(self, client, seller_auth_headers, test_book_data):
@@ -88,7 +84,7 @@ class TestGetBooks:
 
         response = client.get("/books/", params={"sort": "price_desc"})
 
-        assert response.status_code == 200
+        assert_success_response(response, status_code=200)
 
 
 class TestGetBookDetail:
@@ -102,8 +98,7 @@ class TestGetBookDetail:
 
         response = client.get(f"/books/{book_id}")
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["id"] == book_id
         assert data["data"]["title"] == test_book_data["title"]
 
@@ -111,11 +106,7 @@ class TestGetBookDetail:
         """존재하지 않는 도서"""
         response = client.get("/books/99999")
 
-        assert response.status_code == 404
-        data = response.json()
-        assert data["status"] == "error"
-        assert data["message"] is not None
-        assert data["data"] is None
+        assert_error_response(response, status_code=404)
 
 
 class TestUpdateBook:
@@ -133,8 +124,7 @@ class TestUpdateBook:
         }
         response = client.put(f"/books/{book_id}", json=update_data, headers=seller_auth_headers)
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["title"] == "수정된도서"
         assert float(data["data"]["price"]) == 20000
 
@@ -157,7 +147,7 @@ class TestUpdateBook:
         update_data = {"title": "해킹시도"}
         response = client.put(f"/books/{book_id}", json=update_data, headers=other_headers)
 
-        assert response.status_code == 403
+        assert_error_response(response, status_code=403)
 
 
 class TestDeleteBook:
@@ -171,13 +161,10 @@ class TestDeleteBook:
 
         response = client.delete(f"/books/{book_id}", headers=seller_auth_headers)
 
-        assert response.status_code == 200
+        assert_success_response(response, status_code=200)
 
     def test_delete_book_not_found(self, client, seller_auth_headers):
         """존재하지 않는 도서"""
         response = client.delete("/books/99999", headers=seller_auth_headers)
 
-        assert response.status_code == 404
-        data = response.json()
-        assert data["status"] == "error"
-        assert data["message"] is not None
+        assert_error_response(response, status_code=404)

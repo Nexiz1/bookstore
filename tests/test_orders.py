@@ -7,6 +7,7 @@ Orders API 테스트
 - GET /admin/orders: 전체 주문 조회 (Admin)
 """
 import pytest
+from tests.conftest import assert_success_response, assert_error_response
 
 
 @pytest.fixture
@@ -52,9 +53,7 @@ class TestCreateOrder:
         # 주문 생성
         response = client.post("/orders/", json={}, headers=buyer_headers)
 
-        assert response.status_code == 201
-        data = response.json()
-        assert data["status"] == "success"
+        data = assert_success_response(response, status_code=201)
         assert data["data"]["status"] == "CREATED"
         assert len(data["data"]["items"]) == 1
         assert data["data"]["items"][0]["quantity"] == 2
@@ -73,13 +72,13 @@ class TestCreateOrder:
         """빈 장바구니로 주문 시도"""
         response = client.post("/orders/", json={}, headers=buyer_headers)
 
-        assert response.status_code == 400
+        assert_error_response(response, status_code=400)
 
     def test_create_order_without_auth(self, client):
         """인증 없이 주문"""
         response = client.post("/orders/", json={})
 
-        assert response.status_code == 401
+        assert_error_response(response, status_code=401)
 
     def test_create_order_rollback_on_error(
         self, client, buyer_headers, cart_with_item, db_session, monkeypatch
@@ -127,8 +126,7 @@ class TestGetOrders:
         """빈 주문 목록"""
         response = client.get("/orders/", headers=buyer_headers)
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["orders"] == []
 
     def test_get_orders_with_data(self, client, buyer_headers, cart_with_item):
@@ -138,8 +136,7 @@ class TestGetOrders:
 
         response = client.get("/orders/", headers=buyer_headers)
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["total"] == 1
 
 
@@ -154,8 +151,7 @@ class TestGetOrderDetail:
 
         response = client.get(f"/orders/{order_id}", headers=buyer_headers)
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["id"] == order_id
         assert len(data["data"]["items"]) >= 1
 
@@ -163,10 +159,7 @@ class TestGetOrderDetail:
         """존재하지 않는 주문"""
         response = client.get("/orders/99999", headers=buyer_headers)
 
-        assert response.status_code == 404
-        data = response.json()
-        assert data["status"] == "error"
-        assert data["message"] is not None
+        assert_error_response(response, status_code=404)
 
 
 class TestCancelOrder:
@@ -180,18 +173,14 @@ class TestCancelOrder:
 
         response = client.post(f"/orders/{order_id}/cancel", headers=buyer_headers)
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["status"] == "REFUND"
 
     def test_cancel_order_not_found(self, client, buyer_headers):
         """존재하지 않는 주문 취소"""
         response = client.post("/orders/99999/cancel", headers=buyer_headers)
 
-        assert response.status_code == 404
-        data = response.json()
-        assert data["status"] == "error"
-        assert data["message"] is not None
+        assert_error_response(response, status_code=404)
 
 
 class TestAdminOrders:
@@ -204,12 +193,11 @@ class TestAdminOrders:
 
         response = client.get("/admin/orders", headers=admin_headers)
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert data["data"]["total"] == 1
 
     def test_get_all_orders_not_admin(self, client, buyer_headers):
         """일반 사용자로 관리자 API 접근"""
         response = client.get("/admin/orders", headers=buyer_headers)
 
-        assert response.status_code == 403
+        assert_error_response(response, status_code=403)

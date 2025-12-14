@@ -6,6 +6,7 @@ Auth API 테스트
 - POST /auth/logout: 로그아웃
 """
 import pytest
+from tests.conftest import assert_success_response, assert_error_response
 
 
 class TestSignup:
@@ -15,9 +16,7 @@ class TestSignup:
         """정상 회원가입"""
         response = client.post("/auth/signup", json=test_user_data)
 
-        assert response.status_code == 201
-        data = response.json()
-        assert data["status"] == "success"
+        data = assert_success_response(response, status_code=201)
         assert data["data"]["email"] == test_user_data["email"]
         assert data["data"]["name"] == test_user_data["name"]
         assert "id" in data["data"]
@@ -30,8 +29,7 @@ class TestSignup:
         # 동일 이메일로 재가입 시도
         response = client.post("/auth/signup", json=test_user_data)
 
-        assert response.status_code == 409
-        assert response.json()["status"] == "error"
+        assert_error_response(response, status_code=409, error_code="USER_ALREADY_EXISTS")
 
     def test_signup_invalid_email(self, client):
         """잘못된 이메일 형식"""
@@ -67,9 +65,7 @@ class TestLogin:
         }
         response = client.post("/auth/login", json=login_data)
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "success"
+        data = assert_success_response(response, status_code=200)
         assert "access_token" in data["data"]
         assert "refresh_token" in data["data"]
         assert data["data"]["token_type"] == "bearer"
@@ -82,8 +78,7 @@ class TestLogin:
         }
         response = client.post("/auth/login", json=login_data)
 
-        assert response.status_code == 401
-        assert response.json()["status"] == "error"
+        assert_error_response(response, status_code=401, error_code="AUTH_INVALID_CREDENTIALS")
 
     def test_login_nonexistent_user(self, client):
         """존재하지 않는 사용자"""
@@ -93,7 +88,7 @@ class TestLogin:
         }
         response = client.post("/auth/login", json=login_data)
 
-        assert response.status_code == 401
+        assert_error_response(response, status_code=401, error_code="AUTH_INVALID_CREDENTIALS")
 
 
 class TestTokenRefresh:
@@ -112,8 +107,7 @@ class TestTokenRefresh:
         # 토큰 재발급
         response = client.post("/auth/refresh", json={"refresh_token": refresh_token})
 
-        assert response.status_code == 200
-        data = response.json()
+        data = assert_success_response(response, status_code=200)
         assert "access_token" in data["data"]
         assert "refresh_token" in data["data"]
 
@@ -121,7 +115,7 @@ class TestTokenRefresh:
         """잘못된 리프레시 토큰"""
         response = client.post("/auth/refresh", json={"refresh_token": "invalid_token"})
 
-        assert response.status_code == 401
+        assert_error_response(response, status_code=401, error_code="AUTH_INVALID_TOKEN")
 
 
 class TestLogout:
@@ -131,11 +125,10 @@ class TestLogout:
         """정상 로그아웃"""
         response = client.post("/auth/logout", headers=auth_headers)
 
-        assert response.status_code == 200
-        assert response.json()["status"] == "success"
+        assert_success_response(response, status_code=200, has_data=False)
 
     def test_logout_without_auth(self, client):
         """인증 없이 로그아웃 시도"""
         response = client.post("/auth/logout")
 
-        assert response.status_code == 401
+        assert_error_response(response, status_code=401, error_code="AUTH_UNAUTHORIZED")

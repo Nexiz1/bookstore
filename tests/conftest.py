@@ -136,6 +136,7 @@ def client():
     세션은 독립적으로 관리되어 테스트 간 격리를 보장합니다.
 
     Redis 클라이언트도 Mock으로 대체됩니다.
+    Rate limiting은 테스트 환경에서 비활성화됩니다.
     """
     def override_get_db():
         """테스트용 DB 세션 (매 요청마다 새로운 세션 생성)"""
@@ -152,6 +153,9 @@ def client():
     from app.core.redis import get_redis_client
     app.dependency_overrides[get_redis_client] = mock_get_redis_client
 
+    # Rate limiter 비활성화 (테스트 환경)
+    app.state.limiter.enabled = False
+
     # Redis 모듈 자체를 패치하여 스케줄러 등에서도 mock 사용
     with patch('app.core.redis.get_redis_client', mock_get_redis_client):
         with patch('app.core.redis._redis_client', _mock_redis):
@@ -159,6 +163,8 @@ def client():
                 yield test_client
 
     app.dependency_overrides.clear()
+    # Rate limiter 다시 활성화
+    app.state.limiter.enabled = True
 
 
 @pytest.fixture
@@ -355,3 +361,59 @@ def arrived_order(client, buyer_headers, created_book, db_session):
         "order_item_id": order["items"][0]["id"],
         "book": created_book
     }
+
+
+# ============ Test Helper Functions ============
+
+def assert_success_response(response, status_code=200, has_data=True):
+    """성공 응답 검증 헬퍼 함수
+
+    Args:
+        response: TestClient response 객체
+        status_code: 예상 HTTP 상태 코드 (기본: 200)
+        has_data: data 필드가 있어야 하는지 여부 (기본: True)
+    """
+    assert response.status_code == status_code, f"Expected {status_code}, got {response.status_code}: {response.text}"
+    data = response.json()
+    assert data["status"] == "success", f"Expected status='success', got {data.get('status')}"
+    if has_data:
+        assert "data" in data, "Expected 'data' field in response"
+    return data
+
+
+def assert_error_response(response, status_code, error_code=None):
+    """에러 응답 검증 헬퍼 함수
+
+    새로운 에러 응답 포맷 검증:
+    {
+        "timestamp": "2025-12-14T07:22:36",
+        "path": "/api/endpoint",
+        "status": 404,
+        "code": "ERROR_CODE",
+        "message": "...",
+        "details": null
+    }
+
+    Args:
+        response: TestClient response 객체
+        status_code: 예상 HTTP 상태 코드
+        error_code: 예상 에러 코드 (optional, 예: "USER_NOT_FOUND")
+    """
+    assert response.status_code == status_code, f"Expected {status_code}, got {response.status_code}: {response.text}"
+    data = response.json()
+
+    # 새로운 에러 응답 포맷 검증
+    assert "timestamp" in data, "Missing 'timestamp' field"
+    assert "path" in data, "Missing 'path' field"
+    assert "status" in data, "Missing 'status' field"
+    assert "code" in data, "Missing 'code' field"
+    assert "message" in data, "Missing 'message' field"
+
+    # status는 integer HTTP 코드여야 함
+    assert data["status"] == status_code, f"Expected status={status_code}, got {data['status']}"
+
+    # 에러 코드 검증 (선택적)
+    if error_code:
+        assert data["code"] == error_code, f"Expected code='{error_code}', got '{data['code']}'"
+
+    return data
