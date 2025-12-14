@@ -14,6 +14,10 @@ pymysql
 cryptography
 # 데이터베이스 마이그레이션
 alembic
+# Rate Limiting
+slowapi
+# 시드 데이터 생성
+faker
 # 테스트 라이브러리
 pytest
 pytest-asyncio

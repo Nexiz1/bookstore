@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from app.api.dependencies import get_auth_service, get_current_user
+from app.core.limiter import limiter
 from app.models.user import User
 from app.schemas.auth import TokenRefresh, TokenResponse
 from app.schemas.response import SuccessResponse
@@ -11,10 +12,16 @@ router = APIRouter()
 
 
 @router.post("/signup", response_model=SuccessResponse[UserResponse], status_code=201)
+@limiter.limit("10/minute")
 def signup(
-    user_data: UserCreate, auth_service: AuthService = Depends(get_auth_service)
+    request: Request,
+    user_data: UserCreate,
+    auth_service: AuthService = Depends(get_auth_service)
 ):
-    """회원가입 (일반 유저)"""
+    """회원가입 (일반 유저)
+
+    Rate Limit: 분당 10회
+    """
     user = auth_service.signup(user_data)
     return SuccessResponse(
         data=UserResponse.model_validate(user), message="User registered successfully"
@@ -22,17 +29,31 @@ def signup(
 
 
 @router.post("/login", response_model=SuccessResponse[TokenResponse])
-def login(login_data: UserLogin, auth_service: AuthService = Depends(get_auth_service)):
-    """로그인 (Access/Refresh Token 발급)"""
+@limiter.limit("5/minute")
+def login(
+    request: Request,
+    login_data: UserLogin,
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    """로그인 (Access/Refresh Token 발급)
+
+    Rate Limit: 분당 5회 (Brute Force 방지)
+    """
     tokens = auth_service.login(login_data.email, login_data.password)
     return SuccessResponse(data=tokens, message="Login successful")
 
 
 @router.post("/refresh", response_model=SuccessResponse[TokenResponse])
+@limiter.limit("30/minute")
 def refresh_token(
-    token_data: TokenRefresh, auth_service: AuthService = Depends(get_auth_service)
+    request: Request,
+    token_data: TokenRefresh,
+    auth_service: AuthService = Depends(get_auth_service)
 ):
-    """Access Token 재발급"""
+    """Access Token 재발급
+
+    Rate Limit: 분당 30회
+    """
     tokens = auth_service.refresh_token(token_data.refresh_token)
     return SuccessResponse(data=tokens, message="Token refreshed successfully")
 
