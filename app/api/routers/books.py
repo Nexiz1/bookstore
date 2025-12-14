@@ -53,7 +53,7 @@ def get_book(book_id: int, service: BookService = Depends(get_book_service)):
     return SuccessResponse(data=BookResponse.model_validate(book))
 
 
-@router.patch("/{book_id}", response_model=SuccessResponse[BookResponse])
+@router.put("/{book_id}", response_model=SuccessResponse[BookResponse])
 def update_book(
     book_id: int,
     update_data: BookUpdate,

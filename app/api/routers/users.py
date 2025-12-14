@@ -40,7 +40,7 @@ def update_my_profile(
     )
 
 
-@router.patch("/me/password", response_model=SuccessResponse)
+@router.post("/me/password", response_model=SuccessResponse)
 def change_password(
     password_data: PasswordChange,
     current_user: User = Depends(get_current_user),
