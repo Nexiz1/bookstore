@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./bookstore.db"
     # MariaDB 예시: "mysql+pymysql://user:password@localhost/bookStoreDb"
 
+    # Redis
+    REDIS_URL: str = "redis://redis:6379/0"
+
     # JWT
     SECRET_KEY: str = "your-secret-key-change-in-production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30

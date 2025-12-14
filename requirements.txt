@@ -16,6 +16,10 @@ cryptography
 alembic
 # Rate Limiting
 slowapi
+# Redis 캐싱
+redis
+# 스케줄링
+apscheduler
 # 시드 데이터 생성
 faker
 # 테스트 라이브러리
